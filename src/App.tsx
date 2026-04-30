@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Download, Smartphone, MapPin, Clock, FileText, HelpCircle, X } from 'lucide-react';
 import Particles, { initParticlesEngine } from '@tsparticles/react';
@@ -7,7 +7,6 @@ import { loadSlim } from '@tsparticles/slim';
 import type { ISourceOptions } from '@tsparticles/engine';
 import confetti from 'canvas-confetti';
 import { useInView } from 'react-intersection-observer';
-import gsap from './gsap-utils';
 import TermsModal from './TermsModal';
 
 const RELEASE_BASE = 'https://github.com/rickross0/EazyRide-Haye-APKs/releases/download/v3.0.0/';
@@ -292,76 +291,21 @@ function NewsletterPopup() {
   );
 }
 
-/* ─── Epic Hero SVG (GSAP + Interactive) ─── */
+/* ─── Epic Hero SVG (Pure Framer Motion — No GSAP Conflicts) ─── */
 function HeroSVG({ lang }: { lang: string }) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const handshakeRef = useRef<SVGPathElement>(null);
-  const mapRef = useRef<SVGPathElement>(null);
-  const pinRef = useRef<SVGCircleElement>(null);
-
-  useEffect(() => {
-    if (!svgRef.current || !handshakeRef.current || !mapRef.current || !pinRef.current) return;
-
-    const tl = gsap.timeline({ repeat: -1, yoyo: true });
-    // Handshake arm shakes
-    tl.to(handshakeRef.current, {
-      attr: { d: 'M160 255 Q200 235 240 255' },
-      duration: 1.5,
-      ease: 'power2.inOut'
-    })
-    .to(handshakeRef.current, {
-      attr: { d: 'M160 245 Q200 245 240 245' },
-      duration: 1.5,
-      ease: 'power2.inOut'
-    })
-    // Somalia map emerges (scale + glow)
-    .to(mapRef.current, {
-      scale: 1.3,
-      duration: 1,
-      ease: 'power2.out',
-      transformOrigin: '220px 280px',
-      filter: 'drop-shadow(0 0 15px #ffd700)',
-    }, '-=0.5')
-    .to(mapRef.current, {
-      scale: 1,
-      duration: 0.8,
-      ease: 'power2.in',
-      transformOrigin: '220px 280px',
-      filter: 'drop-shadow(0 0 5px #ffd700)',
-    })
-    // Laascaanood pin pulses big
-    .to(pinRef.current, {
-      attr: { r: 8 },
-      duration: 0.4,
-      ease: 'power2.out'
-    }, '-=1')
-    .to(pinRef.current, {
-      attr: { r: 5 },
-      duration: 0.3,
-      ease: 'power2.in'
-    });
-
-    return () => { tl.kill(); };
-  }, []);
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (svgRef.current) {
-      gsap.to(svgRef.current, { rotation: e.clientX * 0.003, duration: 0.3, ease: 'power2.out' });
-    }
-  }, []);
-
   const handleMapHover = () => {
     confetti({ particleCount: 50, spread: 360, startVelocity: 30, colors: ['#ffd700', '#00bcd4'], origin: { x: 0.5, y: 0.7 } });
   };
 
   return (
     <motion.div
-      initial={{ scale: 0.5, rotate: -180 }} animate={{ scale: 1, rotate: 0 }}
-      transition={{ duration: 2, type: 'spring', damping: 10 }}
+      initial={{ scale: 0.5, rotate: -180 }}
+      animate={{ scale: 1, rotate: 0 }}
+      transition={{ duration: 2, type: "spring", damping: 10 }}
       whileHover={{ scale: 1.03 }}
       className="w-[300px] h-[300px] md:w-[500px] md:h-[500px] pointer-events-auto select-none"
     >
-      <svg ref={svgRef} viewBox="0 0 500 500" className="w-full h-full drop-shadow-2xl cursor-grab active:cursor-grabbing" onPointerMove={handlePointerMove}>
+      <svg viewBox="0 0 500 500" className="w-full h-full drop-shadow-2xl cursor-grab active:cursor-grabbing">
         <defs>
           <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#ffd700" stopOpacity="0.8" />
@@ -382,7 +326,7 @@ function HeroSVG({ lang }: { lang: string }) {
         </g>
 
         {/* Corner Gems */}
-        <motion.g animate={{ rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' as const }} style={{ transformOrigin: '250px 250px' }}>
+        <motion.g animate={{ rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: "250px 250px" }}>
           <circle cx="60" cy="60" r="25" fill="#9932cc" className="glow-cyan" />
           <circle cx="440" cy="60" r="25" fill="#9932cc" className="glow-gold" />
           <circle cx="60" cy="440" r="25" fill="#00bcd4" className="glow-cyan" />
@@ -391,58 +335,111 @@ function HeroSVG({ lang }: { lang: string }) {
 
         {/* Cosmic Orbit Rings */}
         <motion.circle cx="250" cy="250" r="180" fill="none" stroke="#00bcd4" strokeWidth="3" strokeDasharray="10 5"
-          animate={{ rotate: 360 }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' as const }} style={{ transformOrigin: '250px 250px' }} />
+          animate={{ rotate: 360 }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: "250px 250px" }} />
         <motion.circle cx="250" cy="250" r="220" fill="none" stroke="#ffd700" strokeWidth="2" opacity="0.6"
-          animate={{ rotate: -360 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' as const }} style={{ transformOrigin: '250px 250px' }} />
+          animate={{ rotate: -360 }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: "250px 250px" }} />
 
         {/* Extra Orbit Rings */}
         {Array.from({ length: 3 }).map((_, i) => (
           <motion.circle key={i} cx="250" cy="250" r={40 + i * 30} fill="none" stroke="#00bcd4" strokeWidth="1" opacity="0.3"
-            animate={{ rotate: i % 2 ? 360 : -360 }} transition={{ duration: 20 + i * 5, repeat: Infinity, ease: 'linear' as const }}
-            style={{ transformOrigin: '250px 250px' }} />
+            animate={{ rotate: i % 2 ? 360 : -360 }} transition={{ duration: 20 + i * 5, repeat: Infinity, ease: "linear" }}
+            style={{ transformOrigin: "250px 250px" }} />
         ))}
 
-        {/* Somalia Map — GSAP animated, no Framer Motion conflict */}
-        <path
-          ref={mapRef}
+        {/* ── Somalia Map: EMERGE + PULSE ── */}
+        <motion.path
           d="M180 280 Q200 300 220 290 Q240 300 260 280 Q240 260 220 270 Q200 260 180 280 Z M190 285 L230 285 Q220 295 210 290 Z"
           fill="#ffd700" stroke="#b8860b" strokeWidth="2"
-          style={{ transformOrigin: '220px 280px', cursor: 'pointer', filter: 'drop-shadow(0 0 5px #ffd700)' }}
-          onMouseEnter={handleMapHover}
-          onClick={() => alert('Laascaanood — Our Hub! 🚀')}
-        />
-        {/* Laascaanood Pin — GSAP animated */}
-        <circle
-          ref={pinRef}
-          cx="205" cy="290" r="5" fill="#00bcd4" className="glow-cyan"
+          style={{ transformOrigin: "220px 280px", cursor: "pointer" }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: 1,
+            filter: [
+              "drop-shadow(0 0 5px #ffd700)",
+              "drop-shadow(0 0 25px #ffd700)",
+              "drop-shadow(0 0 5px #ffd700)",
+            ],
+          }}
+          transition={{
+            scale: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.5 },
+            opacity: { duration: 0.5, delay: 1.5 },
+            filter: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.5 },
+          }}
+          whileHover={{ scale: 1.5, filter: "drop-shadow(0 0 30px #ffd700)", transition: { duration: 0.2 } }}
+          onHoverStart={handleMapHover}
+          onClick={() => alert("Laascaanood — Our Hub! 🚀")}
         />
 
-        {/* Handshake + Horses */}
-        <g className="handshake-group">
-          <path d="M120 220 Q100 200 120 180 Q140 170 160 180 Q180 200 160 220 Z M150 190 L170 195" fill="#cd7f32" stroke="#b87333" strokeWidth="2" className="glow-copper" />
-          <path d="M320 220 Q340 200 320 180 Q300 170 280 180 Q260 200 280 220 Z M290 190 L270 195" fill="#ffd700" stroke="#daa520" strokeWidth="2" className="glow-gold" />
-          {/* Handshake arm — GSAP animated path */}
-          <path
-            ref={handshakeRef}
+        {/* ── Laascaanood Pin: PULSE ── */}
+        <motion.circle
+          cx="205" cy="290" r="5" fill="#00bcd4" className="glow-cyan"
+          initial={{ scale: 0 }}
+          animate={{ scale: [1, 1.8, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          style={{ transformOrigin: "205px 290px" }}
+        />
+
+        {/* ── Handshake + Horses: ARM SHAKES ── */}
+        <motion.g
+          animate={{ rotate: [-3, 3, -3, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          style={{ transformOrigin: "200px 250px" }}
+        >
+          {/* Haye! Horse (Left — Copper) */}
+          <motion.path
+            d="M120 220 Q100 200 120 180 Q140 170 160 180 Q180 200 160 220 Z M150 190 L170 195"
+            fill="#cd7f32" stroke="#b87333" strokeWidth="2"
+            animate={{ y: [0, -3, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* EazyRide Horse (Right — Gold) */}
+          <motion.path
+            d="M320 220 Q340 200 320 180 Q300 170 280 180 Q260 200 280 220 Z M290 190 L270 195"
+            fill="#ffd700" stroke="#daa520" strokeWidth="2"
+            animate={{ y: [0, 3, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Handshake Arm — WAVES up and down */}
+          <motion.path
             d="M160 250 Q200 240 240 250"
             stroke="#ffd700" strokeWidth="18" strokeLinecap="round" fill="none"
             className="glow-gold"
+            animate={{
+              d: [
+                "M160 250 Q200 240 240 250",
+                "M160 255 Q200 230 240 255",
+                "M160 250 Q200 240 240 250",
+                "M160 245 Q200 250 240 245",
+                "M160 250 Q200 240 240 250",
+              ],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 1,
+            }}
           />
-        </g>
+        </motion.g>
 
         {/* Arabic/English Unity */}
-        {lang === 'ar' ? (
-          <text x="250" y="80" textAnchor="middle" fill="#ffd700" fontSize="22" fontWeight="bold" className="glow-gold">الوحدة قوة</text>
+        {lang === "ar" ? (
+          <motion.text x="250" y="80" textAnchor="middle" fill="#ffd700" fontSize="22" fontWeight="bold"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2, duration: 1 }}
+          >الوحدة قوة</motion.text>
         ) : (
           <motion.text x="250" y="100" textAnchor="middle" fill="#ffd700" fontSize="20" fontWeight="bold"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2, duration: 1 }}>Unity is Power</motion.text>
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2, duration: 1 }}
+          >Unity is Power</motion.text>
         )}
 
         <motion.text x="250" y="460" textAnchor="middle" fill="#ffd700" fontSize="16" opacity="0.9"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.5, duration: 1 }}>Powered by Somali</motion.text>
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.5, duration: 1 }}
+        >Powered by Somali</motion.text>
 
-        {/* Camels + Trees */}
-        <motion.g initial={{ x: -100 }} animate={{ x: 0 }} transition={{ delay: 2, duration: 1.5, type: 'spring' }}>
+        {/* Camels + Trees (Trot In) */}
+        <motion.g initial={{ x: -100 }} animate={{ x: 0 }} transition={{ delay: 2, duration: 1.5, type: "spring" }}>
           <ellipse cx="150" cy="430" rx="20" ry="12" fill="#daa520" />
           <path d="M140 410 Q150 420 160 415" fill="#cd853f" />
           <ellipse cx="320" cy="430" rx="20" ry="12" fill="#daa520" />
@@ -452,10 +449,10 @@ function HeroSVG({ lang }: { lang: string }) {
         </motion.g>
 
         {/* Orbiting Planets */}
-        <motion.g animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: 'linear' as const }} style={{ transformOrigin: '250px 250px' }}>
+        <motion.g animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: "250px 250px" }}>
           <circle cx="80" cy="120" r="8" fill="#00bcd4" className="glow-cyan" />
         </motion.g>
-        <motion.g animate={{ rotate: -360 }} transition={{ duration: 18, repeat: Infinity, ease: 'linear' as const }} style={{ transformOrigin: '250px 250px' }}>
+        <motion.g animate={{ rotate: -360 }} transition={{ duration: 18, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: "250px 250px" }}>
           <circle cx="420" cy="120" r="6" fill="#ffd700" className="glow-gold" />
         </motion.g>
       </svg>
