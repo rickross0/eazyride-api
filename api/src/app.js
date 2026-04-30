@@ -19,14 +19,18 @@ const app = express();
 // SECURITY MIDDLEWARE
 // ============================================================
 
-// Set security HTTP headers
 app.use(helmet());
 
-// Enable CORS
+// Enable CORS — supports comma-separated origins from env var
+const corsOrigin = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean)
+  : '*';
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: corsOrigin,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 // Rate limiting
@@ -50,10 +54,7 @@ if (process.env.NODE_ENV === 'development') {
 // STATIC FILES
 // ============================================================
 
-// Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
-// Serve admin dashboard (production)
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
 
 // ============================================================
@@ -78,7 +79,7 @@ app.get('/', (req, res) => {
     name: 'EazyRide + Haye! API',
     version: '3.0.0',
     description: 'Premium Super-App for Somalia',
-    docs: '/api/docs',
+    docs: '/api',
     health: '/health'
   });
 });

@@ -1,20 +1,45 @@
 services:
+  # ── PostgreSQL Database ────────────────────────────────────
+  - type: pserv
+    name: eazyride-db
+    runtime: postgres
+    plan: free
+    envVars:
+      - key: POSTGRES_DB
+        value: eazyride_haye
+
+  # ── API Server ─────────────────────────────────────────────
   - type: web
     name: eazyride-haye-api
     runtime: node
     plan: free
+    region: oregon
     buildCommand: npm install && npx prisma generate
-    startCommand: node src/db/ensureSchema.js && npx prisma db push && node prisma/seed.js && node src/server.js
+    startCommand: node -e "require('./src/db/ensureSchema.js').ensureSchema().then(() => { const { execSync } = require('child_process'); execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' }); execSync('node prisma/seed.js', { stdio: 'inherit' }); require('./src/server.js'); })"
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3000
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: eazyride-db
+          property: connectionString
       - key: REDIS_URL
         sync: false
       - key: JWT_SECRET
         generateValue: true
+      - key: JWT_EXPIRES
+        value: 7d
       - key: CORS_ORIGIN
+        sync: false
+      - key: WAAFI_ENV
+        value: sandbox
+      - key: WAAFI_MERCHANT_UID
+        sync: false
+      - key: WAAFI_API_USER_ID
+        sync: false
+      - key: WAAFI_API_KEY
+        sync: false
+      - key: WAAFI_WEBHOOK_SECRET
         sync: false

@@ -10,9 +10,9 @@
     "db:seed": "node prisma/seed.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "build": "npm run db:generate",
-    "render-start": "node src/db/ensureSchema.js; npx prisma db push; node prisma/seed.js; node src/server.js",
-    "postinstall": "npx prisma generate"
+    "build": "prisma generate",
+    "render-start": "node -e \"require('./src/db/ensureSchema.js').ensureSchema().then(() => { const { execSync } = require('child_process'); execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' }); execSync('node prisma/seed.js', { stdio: 'inherit' }); require('./src/server.js'); })\"",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.2.0",
@@ -30,6 +30,7 @@
     "node-cron": "^3.0.3",
     "node-fetch": "^2.7.0",
     "pdfkit": "^0.14.0",
+    "prisma": "^6.2.0",
     "socket.io": "^4.7.4",
     "uuid": "^9.0.0",
     "winston": "^3.11.0",
@@ -40,8 +41,7 @@
     "axios": "^1.6.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.3",
-    "prisma": "^6.2.0"
+    "nodemon": "^3.0.3"
   },
   "engines": {
     "node": ">=18.0.0"

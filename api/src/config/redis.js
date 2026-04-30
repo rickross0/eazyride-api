@@ -1,5 +1,5 @@
 // ============================================================
-// Redis Configuration
+// Redis Configuration — gracefully degrades if no REDIS_URL
 // ============================================================
 
 const Redis = require('ioredis');
@@ -8,20 +8,29 @@ const logger = require('../utils/logger');
 let redis = null;
 
 const connectRedis = async () => {
+  const redisUrl = process.env.REDIS_URL;
+
+  if (!redisUrl) {
+    logger.warn('⚠️ REDIS_URL not set — caching disabled, continuing without Redis');
+    return null;
+  }
+
   try {
-    redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: process.env.REDIS_PORT || 6379,
-      password: process.env.REDIS_PASSWORD || undefined,
+    redis = new Redis(redisUrl, {
       retryDelayOnFailover: 100,
       maxRetriesPerRequest: 3,
-      lazyConnect: true
+      lazyConnect: true,
+      tls: redisUrl.startsWith('rediss://') ? { rejectUnauthorized: false } : undefined,
     });
 
     await redis.connect();
-    
+
     redis.on('error', (err) => {
-      logger.error('Redis error:', err);
+      logger.error('Redis error:', err.message);
+    });
+
+    redis.on('reconnecting', () => {
+      logger.warn('⚠️ Redis reconnecting...');
     });
 
     redis.on('connect', () => {
@@ -30,14 +39,15 @@ const connectRedis = async () => {
 
     return redis;
   } catch (error) {
-    logger.warn('⚠️ Redis connection failed:', error.message);
-    throw error;
+    logger.warn('⚠️ Redis connection failed, continuing without cache:', error.message);
+    redis = null;
+    return null;
   }
 };
 
 const getRedis = () => redis;
 
-// Cache helpers
+// Cache helpers — all no-op gracefully when Redis is unavailable
 const cache = {
   async get(key) {
     if (!redis) return null;
@@ -54,7 +64,7 @@ const cache = {
     try {
       await redis.set(key, JSON.stringify(value), 'EX', ttl);
     } catch (err) {
-      logger.error('Redis set error:', err);
+      logger.error('Redis set error:', err.message);
     }
   },
 
@@ -63,7 +73,7 @@ const cache = {
     try {
       await redis.del(key);
     } catch (err) {
-      logger.error('Redis del error:', err);
+      logger.error('Redis del error:', err.message);
     }
   },
 
@@ -75,7 +85,7 @@ const cache = {
         await redis.del(...keys);
       }
     } catch (err) {
-      logger.error('Redis invalidatePattern error:', err);
+      logger.error('Redis invalidatePattern error:', err.message);
     }
   }
 };
