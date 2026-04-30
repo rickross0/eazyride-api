@@ -295,20 +295,58 @@ function NewsletterPopup() {
 /* ─── Epic Hero SVG (GSAP + Interactive) ─── */
 function HeroSVG({ lang }: { lang: string }) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const handshakeRef = useRef<SVGPathElement>(null);
+  const mapRef = useRef<SVGPathElement>(null);
+  const pinRef = useRef<SVGCircleElement>(null);
 
   useEffect(() => {
-    if (!svgRef.current) return;
+    if (!svgRef.current || !handshakeRef.current || !mapRef.current || !pinRef.current) return;
+
     const tl = gsap.timeline({ repeat: -1, yoyo: true });
-    tl.to('.handshake-arm', { rotation: 5, duration: 1.5, ease: 'power2.inOut', transformOrigin: '200px 250px' })
-      .to('.handshake-arm', { rotation: -5, duration: 1.5, ease: 'power2.inOut' })
-      .to('.somalia-map', { scale: 1.2, duration: 1, ease: 'power2.out' }, '-=0.5')
-      .to('.laascaanood-pin', { scale: 2, duration: 0.3 }, '-=1');
+    // Handshake arm shakes
+    tl.to(handshakeRef.current, {
+      attr: { d: 'M160 255 Q200 235 240 255' },
+      duration: 1.5,
+      ease: 'power2.inOut'
+    })
+    .to(handshakeRef.current, {
+      attr: { d: 'M160 245 Q200 245 240 245' },
+      duration: 1.5,
+      ease: 'power2.inOut'
+    })
+    // Somalia map emerges (scale + glow)
+    .to(mapRef.current, {
+      scale: 1.3,
+      duration: 1,
+      ease: 'power2.out',
+      transformOrigin: '220px 280px',
+      filter: 'drop-shadow(0 0 15px #ffd700)',
+    }, '-=0.5')
+    .to(mapRef.current, {
+      scale: 1,
+      duration: 0.8,
+      ease: 'power2.in',
+      transformOrigin: '220px 280px',
+      filter: 'drop-shadow(0 0 5px #ffd700)',
+    })
+    // Laascaanood pin pulses big
+    .to(pinRef.current, {
+      attr: { r: 8 },
+      duration: 0.4,
+      ease: 'power2.out'
+    }, '-=1')
+    .to(pinRef.current, {
+      attr: { r: 5 },
+      duration: 0.3,
+      ease: 'power2.in'
+    });
+
     return () => { tl.kill(); };
   }, []);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (svgRef.current) {
-      gsap.to(svgRef.current, { rotation: e.clientX * 0.005, duration: 0.3, ease: 'power2.out' });
+      gsap.to(svgRef.current, { rotation: e.clientX * 0.003, duration: 0.3, ease: 'power2.out' });
     }
   }, []);
 
@@ -364,25 +402,32 @@ function HeroSVG({ lang }: { lang: string }) {
             style={{ transformOrigin: '250px 250px' }} />
         ))}
 
-        {/* Somalia Map (GSAP target) */}
-        <motion.path className="somalia-map"
+        {/* Somalia Map — GSAP animated, no Framer Motion conflict */}
+        <path
+          ref={mapRef}
           d="M180 280 Q200 300 220 290 Q240 300 260 280 Q240 260 220 270 Q200 260 180 280 Z M190 285 L230 285 Q220 295 210 290 Z"
           fill="#ffd700" stroke="#b8860b" strokeWidth="2"
-          initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', delay: 1.5 }}
-          whileHover={{ scale: 1.5, filter: 'drop-shadow(0 0 30px #ffd700)' }}
-          onHoverStart={handleMapHover}
+          style={{ transformOrigin: '220px 280px', cursor: 'pointer', filter: 'drop-shadow(0 0 5px #ffd700)' }}
+          onMouseEnter={handleMapHover}
           onClick={() => alert('Laascaanood — Our Hub! 🚀')}
-          style={{ transformOrigin: '220px 280px', cursor: 'pointer' }}
         />
-        <motion.circle className="laascaanood-pin" cx="205" cy="290" r="5" fill="#00bcd4"
-          animate={{ scale: [1, 1.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }} />
+        {/* Laascaanood Pin — GSAP animated */}
+        <circle
+          ref={pinRef}
+          cx="205" cy="290" r="5" fill="#00bcd4" className="glow-cyan"
+        />
 
-        {/* Handshake + Horses (GSAP target) */}
+        {/* Handshake + Horses */}
         <g className="handshake-group">
           <path d="M120 220 Q100 200 120 180 Q140 170 160 180 Q180 200 160 220 Z M150 190 L170 195" fill="#cd7f32" stroke="#b87333" strokeWidth="2" className="glow-copper" />
           <path d="M320 220 Q340 200 320 180 Q300 170 280 180 Q260 200 280 220 Z M290 190 L270 195" fill="#ffd700" stroke="#daa520" strokeWidth="2" className="glow-gold" />
-          <path className="handshake-arm" d="M160 250 Q200 240 240 250" stroke="#ffd700" strokeWidth="18" strokeLinecap="round" fill="none" />
+          {/* Handshake arm — GSAP animated path */}
+          <path
+            ref={handshakeRef}
+            d="M160 250 Q200 240 240 250"
+            stroke="#ffd700" strokeWidth="18" strokeLinecap="round" fill="none"
+            className="glow-gold"
+          />
         </g>
 
         {/* Arabic/English Unity */}
