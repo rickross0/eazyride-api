@@ -740,7 +740,7 @@ export default function App() {
       {/* Global Starfield */}
       {particlesReady && <Particles id="starfield" options={starfieldOptions} className="fixed inset-0 z-0 pointer-events-none" />}
 
-      <nav className="fixed top-0 w-full bg-navy-900/95 backdrop-blur-xl z-50 px-4 py-4 border-b border-navy-500/50">
+      <nav className="fixed top-0 w-full bg-navy-900/95 backdrop-blur-xl z-50 px-4 py-2 border-b border-navy-500/50">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <motion.img src="/EazyRide-logo-removebg-preview.png" alt="EazyRide" className="w-14 cursor-pointer"
             whileHover={{ scale: 1.2, rotate: 360 }} transition={{ duration: 0.5 }} />
