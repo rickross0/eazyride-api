@@ -49,10 +49,8 @@ function Hero() {
 
   return (
     <section className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-700 to-black relative overflow-hidden">
-      {/* Particle field */}
       <Particles id="hero-particles" options={particleOptions} className="absolute inset-0 z-0" />
 
-      {/* Animated Handshake SVG */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -60,18 +58,15 @@ function Hero() {
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 md:w-96 h-72 md:h-96 z-10 pointer-events-none select-none"
       >
         <svg viewBox="0 0 400 400" className="w-full h-full">
-          {/* Outer ring */}
           <motion.circle
             cx="200" cy="200" r="180" fill="none" stroke="#00bcd4" strokeWidth="2"
             initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2 }}
           />
-          {/* Inner ring */}
           <motion.circle
             cx="200" cy="200" r="150" fill="none" stroke="#ffd700" strokeWidth="1.5" strokeDasharray="8 4"
             initial={{ rotate: 0 }} animate={{ rotate: 360 }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' as const }}
             style={{ transformOrigin: '200px 200px' }}
           />
-          {/* Handshake arm */}
           <motion.path
             d="M100 250 Q150 200 200 220 Q250 200 300 250"
             stroke="#ffd700" strokeWidth="12" fill="none" strokeLinecap="round"
@@ -80,7 +75,6 @@ function Hero() {
             transition={{ duration: 1.5, delay: 0.5 }}
             className="glow-gold"
           />
-          {/* Left horse head (Haye! – copper) */}
           <motion.g
             animate={{ rotate: [-5, 5, -5] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' as const }}
@@ -88,7 +82,6 @@ function Hero() {
           >
             <path d="M80 180 Q60 160 80 140 Q100 130 120 140 Q140 160 120 180 Z" fill="#cd7f32" />
           </motion.g>
-          {/* Right horse head (EazyRide – gold) */}
           <motion.g
             animate={{ rotate: [5, -5, 5] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' as const }}
@@ -96,7 +89,14 @@ function Hero() {
           >
             <path d="M280 180 Q300 160 280 140 Q260 130 240 140 Q220 160 240 180 Z" fill="#ffd700" />
           </motion.g>
-          {/* Somalia / Somaliland shape */}
+          {/* Cloud-white horse accent */}
+          <motion.g
+            animate={{ rotate: [3, -3, 3] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
+            style={{ transformOrigin: '260px 130px' }}
+          >
+            <path d="M240 145 Q255 115 270 130 Q280 145 265 155 Z" fill="rgba(255,255,255,0.6)" />
+          </motion.g>
           <motion.path
             d="M150 220 Q170 240 190 230 Q210 240 230 220 Q210 200 190 210 Q170 200 150 220 Z"
             fill="#ffd700" opacity="0.8"
@@ -104,13 +104,11 @@ function Hero() {
             transition={{ delay: 1.2, type: 'spring' }}
             style={{ transformOrigin: '190px 220px' }}
           />
-          {/* Map pin for Laascaanood */}
           <motion.circle
             cx="190" cy="215" r="5" fill="#00bcd4"
             animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
-          {/* Unity text */}
           <text x="200" y="340" textAnchor="middle" fill="#ffd700" fontSize="22" fontWeight="bold" fontFamily="Inter, sans-serif">
             UNITY IS POWER
           </text>
@@ -120,7 +118,6 @@ function Hero() {
         </svg>
       </motion.div>
 
-      {/* Main hero content */}
       <motion.div
         className="relative z-20 flex items-center justify-center min-h-screen px-4 text-white"
         style={{ y: heroY }}
@@ -131,34 +128,63 @@ function Hero() {
           transition={{ duration: 1 }}
           className="text-center max-w-4xl mx-auto"
         >
+          {/* Cloud EazyRide Logo */}
+          <motion.img
+            src="/eazyride-cloud.png"
+            alt="EazyRide Cloud"
+            className="w-24 md:w-32 mx-auto mb-8"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, type: 'spring' }}
+            whileHover={{ scale: 1.15, rotate: 5 }}
+          />
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-gold via-cyan to-copper bg-clip-text text-transparent">
             {t('heroTitle')}
           </h1>
-          <p className="text-xl md:text-2xl mb-12 opacity-90 max-w-2xl mx-auto">{t('heroSub')}</p>
+          <p className="text-xl md:text-2xl mb-10 opacity-90">{t('heroSub')}</p>
           <motion.div
+            className="flex flex-wrap justify-center gap-4"
             variants={stagger}
             initial="hidden"
             animate="visible"
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            {[
-              { icon: <MapPin className="w-5 h-5" />, label: t('ctaRide'), href: '#downloads' },
-              { icon: <Smartphone className="w-5 h-5" />, label: t('ctaFood'), href: '#downloads' },
-              { icon: <Clock className="w-5 h-5" />, label: t('ctaCars'), href: '#downloads' }
-            ].map((btn, i) => (
-              <motion.a
-                key={i}
-                href={btn.href}
-                variants={fadeUp}
-                whileHover={{ scale: 1.08, boxShadow: '0 0 30px rgba(255,215,0,0.4)' }}
+            <motion.a href="#downloads" variants={fadeUp}>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 bg-gradient-to-r from-gold to-copper px-8 py-4 rounded-2xl font-bold text-navy-900 shadow-2xl"
+                className="bg-gradient-to-r from-gold to-copper px-10 py-5 rounded-2xl text-navy-900 font-bold text-lg shadow-2xl glow-gold transition-all cursor-pointer"
               >
-                {btn.icon} {btn.label}
-              </motion.a>
-            ))}
+                <MapPin className="inline w-5 h-5 mr-2 -mt-1" />{t('ctaRide')}
+              </motion.button>
+            </motion.a>
+            <motion.a href="#downloads" variants={fadeUp}>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-gradient-to-r from-cyan to-gold px-10 py-5 rounded-2xl text-navy-900 font-bold text-lg shadow-2xl glow-cyan transition-all cursor-pointer"
+              >
+                <Smartphone className="inline w-5 h-5 mr-2 -mt-1" />{t('ctaFood')}
+              </motion.button>
+            </motion.a>
+            <motion.a href="#downloads" variants={fadeUp}>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-gradient-to-r from-copper to-gold px-10 py-5 rounded-2xl text-navy-900 font-bold text-lg shadow-2xl glow-copper transition-all cursor-pointer"
+              >
+                <Clock className="inline w-5 h-5 mr-2 -mt-1" />{t('ctaCars')}
+              </motion.button>
+            </motion.a>
           </motion.div>
         </motion.div>
+      </motion.div>
+
+      <motion.div
+        animate={{ y: [0, 12, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 text-gold text-4xl"
+      >
+        ↓
       </motion.div>
     </section>
   );
@@ -169,57 +195,147 @@ function Services() {
   const { t } = useTranslation();
   const [ref, inView] = useInView({ threshold: 0.2, triggerOnce: true });
 
-  const cards = [
-    {
-      logo: '/eazyride-logo.svg',
-      title: t('services.eazyride'),
-      desc: [t('services.desc1'), t('services.desc2')],
-      color: 'gold' as const,
-      border: 'hover:border-gold/60'
-    },
-    {
-      logo: '/haye-logo.svg',
-      title: t('services.haye'),
-      desc: [t('services.desc3')],
-      color: 'copper' as const,
-      border: 'hover:border-copper/60'
-    }
-  ];
-
   return (
-    <section ref={ref} id="services" className="py-32 px-4 bg-navy-900/50 backdrop-blur-md text-white">
-      <div className="max-w-6xl mx-auto">
+    <section ref={ref} id="services" className="py-32 px-4 bg-gradient-to-b from-black to-navy-900 text-white relative">
+      <Particles options={particleOptions} className="absolute inset-0 z-0 opacity-30" />
+      <div className="relative z-10 max-w-6xl mx-auto">
         <motion.h2
-          initial={{ opacity: 0, y: 50 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          className="text-5xl font-bold text-center mb-20 bg-gradient-to-r from-gold to-cyan bg-clip-text text-transparent"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={inView ? { opacity: 1, scale: 1 } : {}}
+          className="text-4xl md:text-5xl font-bold text-center mb-20 text-gold glow-gold"
         >
           {t('services.title')}
         </motion.h2>
+
         <div className="grid md:grid-cols-2 gap-12">
-          {cards.map((card, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: i % 2 ? 50 : -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: i * 0.15 }}
-              whileHover={{ y: -12, scale: 1.02 }}
-              className={`bg-navy-700/80 backdrop-blur-xl p-12 rounded-3xl shadow-2xl border border-navy-500/50 ${card.border} transition-all cursor-pointer group`}
-            >
-              <img src={card.logo} alt="" className="w-32 mx-auto mb-8 group-hover:animate-float transition-all" />
-              <h3 className={`text-3xl font-bold mb-6 ${card.color === 'gold' ? 'text-gradient-gold' : 'text-gradient-cyan'}`}>
-                {card.title}
-              </h3>
-              <ul className="space-y-4 text-lg">
-                {card.desc.map((d, j) => (
-                  <li key={j}>• {d}</li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
+          <motion.div
+            initial={{ opacity: 0, x: -60 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.8 }}
+            whileHover={{ scale: 1.03, y: -8 }}
+            className="bg-navy-700/60 backdrop-blur-xl p-10 rounded-3xl border border-cyan/30 hover:border-cyan/60 shadow-2xl group"
+          >
+            <motion.img
+              src="/eazyride-cloud.png"
+              alt="EazyRide Cloud"
+              className="w-20 mx-auto mb-6 group-hover:animate-pulse"
+              whileHover={{ scale: 1.15, rotate: 5 }}
+            />
+            <h3 className="text-3xl font-bold mb-6 text-cyan">{t('services.eazyride')}</h3>
+            <ul className="space-y-3 text-lg opacity-90">
+              <motion.li whileHover={{ x: 10 }} className="flex items-start">
+                <span className="w-2 h-2 bg-cyan rounded-full mt-2 mr-3 flex-shrink-0" />{t('services.desc1')}
+              </motion.li>
+              <motion.li whileHover={{ x: 10 }} className="flex items-start">
+                <span className="w-2 h-2 bg-cyan rounded-full mt-2 mr-3 flex-shrink-0" />{t('services.desc2')}
+              </motion.li>
+            </ul>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 60 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.8 }}
+            whileHover={{ scale: 1.03, y: -8 }}
+            className="bg-navy-700/60 backdrop-blur-xl p-10 rounded-3xl border border-gold/30 hover:border-gold/60 shadow-2xl group"
+          >
+            <img
+              src="/haye-green.png"
+              alt="Haye!"
+              className="w-32 mx-auto mb-8 filter brightness-0 invert group-hover:brightness-100 group-hover:invert-0 transition-all duration-500"
+            />
+            <h3 className="text-3xl font-bold mb-6 text-gold">{t('services.haye')}</h3>
+            <ul className="space-y-3 text-lg opacity-90">
+              <motion.li whileHover={{ x: 10 }} className="flex items-start">
+                <span className="w-2 h-2 bg-gold rounded-full mt-2 mr-3 flex-shrink-0" />{t('services.desc3')}
+              </motion.li>
+            </ul>
+          </motion.div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Benefits (v5) ─── */
+function Benefits() {
+  const { t } = useTranslation();
+  const roles = ['rider', 'driver', 'store', 'provider'];
+  const [ref, inView] = useInView({ threshold: 0.1, triggerOnce: true });
+
+  const tableRows = [
+    { app: t('benefits.table.riderApp'), who: t('benefits.table.riderWho'), benefit: t('benefits.table.riderBenefit') },
+    { app: t('benefits.table.driverApp'), who: t('benefits.table.driverWho'), benefit: t('benefits.table.driverBenefit') },
+    { app: t('benefits.table.storeApp'), who: t('benefits.table.storeWho'), benefit: t('benefits.table.storeBenefit') },
+    { app: t('benefits.table.providerApp'), who: t('benefits.table.providerWho'), benefit: t('benefits.table.providerBenefit') }
+  ];
+
+  return (
+    <section ref={ref} id="benefits" className="py-32 px-4 bg-gradient-to-b from-black to-navy-900 text-white overflow-hidden relative">
+      <Particles options={particleOptions} className="absolute inset-0 z-0 opacity-50" />
+      <div className="relative z-10 max-w-6xl mx-auto">
+        <motion.h2
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={inView ? { opacity: 1, scale: 1 } : {}}
+          className="text-5xl font-bold text-center mb-20 bg-gradient-to-r from-gold to-cyan bg-clip-text text-transparent glow-cyan"
+        >
+          {t('benefits.title')}
+        </motion.h2>
+
+        <div className="grid lg:grid-cols-2 gap-8 mb-20">
+          {roles.map((role, i) => {
+            const benefitsList = t(`benefits.${role}.benefits`, { returnObjects: true });
+            return (
+              <motion.div
+                key={role}
+                initial={{ opacity: 0, y: 50 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: i * 0.2 }}
+                whileHover={{ scale: 1.02, y: -10 }}
+                className="bg-navy-700/70 backdrop-blur-xl p-10 rounded-3xl border border-gold/30 hover:border-cyan/50 shadow-2xl group cursor-pointer"
+              >
+                <h3 className="text-3xl font-bold mb-4 text-gold">{t(`benefits.${role}.who`)}</h3>
+                <p className="text-xl mb-6 opacity-90 italic">{t(`benefits.${role}.for`)}</p>
+                <ul className="space-y-3 text-lg">
+                  {Array.isArray(benefitsList) && benefitsList.map((benefit: any, j: number) => (
+                    <motion.li key={j} whileHover={{ x: 10 }} className="flex items-start group-hover:text-cyan transition-colors">
+                      <span className="w-2 h-2 bg-cyan rounded-full mt-2 mr-4 flex-shrink-0" /> {benefit}
+                    </motion.li>
+                  ))}
+                </ul>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          className="overflow-x-auto"
+        >
+          <table className="w-full text-left bg-navy-800/50 backdrop-blur-xl rounded-2xl border border-navy-500/50">
+            <thead>
+              <tr className="border-b border-gold/30">
+                <th className="p-4 text-gold font-bold">{t('benefits.table.app')}</th>
+                <th className="p-4 text-gold font-bold">{t('benefits.table.who')}</th>
+                <th className="p-4 text-gold font-bold">{t('benefits.table.mainBenefit')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tableRows.map((row, i) => (
+                <motion.tr
+                  key={i}
+                  whileHover={{ backgroundColor: 'rgba(255,215,0,0.1)' }}
+                  className="hover:glow-gold transition-all border-b border-navy-500/30 last:border-0"
+                >
+                  <td className="p-4 font-semibold">{row.app}</td>
+                  <td className="p-4">{row.who}</td>
+                  <td className="p-4">{row.benefit}</td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </motion.div>
       </div>
     </section>
   );
@@ -263,7 +379,6 @@ function Downloads() {
           {t('downloads.title')}
         </motion.h2>
 
-        {/* Terms & Conditions checkbox */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -329,8 +444,8 @@ function Downloads() {
 
 /* ─── Main App ─── */
 export default function App() {
-  const { i18n } = useTranslation();
-  const [isSo, setIsSo] = useState(false);
+  const { t, i18n } = useTranslation();
+  const [lang, setLang] = useState('en');
   const [particlesReady, setParticlesReady] = useState(false);
 
   useEffect(() => {
@@ -339,34 +454,51 @@ export default function App() {
     }).then(() => setParticlesReady(true));
   }, []);
 
+  // RTL support: switch dir when language changes
   useEffect(() => {
-    i18n.changeLanguage(isSo ? 'so' : 'en');
-  }, [isSo, i18n]);
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+    i18n.changeLanguage(lang);
+  }, [lang, i18n]);
 
   return (
     <div className="font-sans antialiased">
       <nav className="fixed top-0 w-full bg-navy-900/95 backdrop-blur-xl z-50 px-4 py-4 border-b border-navy-500/50">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <motion.img
-            src="/eazyride-logo.svg"
-            alt="Logo"
-            className="w-14 cursor-pointer"
-            whileHover={{ scale: 1.2, rotate: 360 }}
+            src="/eazyride-cloud.png"
+            alt="EazyRide Cloud"
+            className="w-16 cursor-pointer"
+            whileHover={{ scale: 1.15, rotate: 5 }}
             transition={{ duration: 0.5 }}
           />
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsSo(!isSo)}
-            className="bg-gradient-to-r from-gold to-copper px-8 py-3 rounded-2xl font-bold text-navy-900 shadow-xl animate-pulse-glow transition-all cursor-pointer"
-          >
-            {isSo ? 'English' : 'Soomaali'}
-          </motion.button>
+          {/* Language selector: 3 buttons (EN/SO/AR) */}
+          <motion.div className="flex space-x-2 rtl:space-x-reverse">
+            <button
+              onClick={() => setLang('en')}
+              className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${lang === 'en' ? 'bg-gold text-navy-900' : 'bg-navy-700 text-white hover:bg-navy-500'}`}
+            >
+              {t('switchEn')}
+            </button>
+            <button
+              onClick={() => setLang('so')}
+              className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${lang === 'so' ? 'bg-gold text-navy-900' : 'bg-navy-700 text-white hover:bg-navy-500'}`}
+            >
+              {t('switchSo')}
+            </button>
+            <button
+              onClick={() => setLang('ar')}
+              className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${lang === 'ar' ? 'bg-gold text-navy-900' : 'bg-navy-700 text-white hover:bg-navy-500'}`}
+            >
+              {t('switchAr')}
+            </button>
+          </motion.div>
         </div>
       </nav>
 
       {particlesReady && <Hero />}
       <Services />
+      <Benefits />
       <Downloads />
 
       <footer className="py-16 bg-navy-900 text-center text-gray-400 border-t border-navy-500/50">

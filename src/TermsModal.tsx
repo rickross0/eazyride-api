@@ -42,7 +42,7 @@ Contact: support@eazyride.so
 `;
 
 const TERMS_SO = `
-EazyRide + Haye! — Shuruudaha & Qaa\'dada
+EazyRide + Haye! — Shuruudaha & Qaa'dada
 
 Taariikhda hawlgelinta: Abriil 30, 2026
 
@@ -81,9 +81,53 @@ Shuruudahan waxaa maamula sharciga Soomaaliya. Murannada waxaa laga xalin doonaa
 La xiriir: support@eazyride.so
 `;
 
+const TERMS_AR = `
+إيزي رايد + هاي! — الشروط والأحكام
+
+تاريخ السريان: 30 أبريل 2026
+
+1. قبول الشروط
+بتحميل أو تثبيت أو استخدام أي تطبيق من إيزي رايد + هاي!، فإنك توافق على الالتزام بهذه الشروط والأحكام.
+
+2. الخدمات
+إيزي رايد + هاي! توفر خدمات طلب رحلات وتوصيل طعام واستئجار سيارات في لاسعانود، صول، الصومال. جميع الخدمات تخضع للتوفر.
+
+3. حسابات المستخدمين
+يجب التسجيل برقم هاتف صالح. أنت مسؤول عن الحفاظ على بيانات حسابك.
+
+4. المدفوعات
+تتم جميع المدفوعات عبر EVC للدفع بالهاتف المحمول. الأسعار معروضة بالدولار الأمريكي؛ ويتم التحويل إلى الشلن الصومالي حسب سعر EVC وقت المعاملة.
+
+5. سياسة الرحلات والتوصيل
+- يجب على الركاب اتباع إرشادات السلامة.
+- أوقات توصيل الطعام تقديرية وقد تتفاوت.
+- شروط استئجار السيارات يحددها كل مزود.
+
+6. الإلغاء والاسترداد
+يمكن إلغاء الرحلات خلال دقيقتين من الحجز دون رسوم. طلبات الطعام الملغاة بعد التحضير لا تُسترد. إلغاء استئجار السيارات يتبع سياسة المزود.
+
+7. المسؤولية
+إيزي رايد + هاي! تعمل كمنصة تربط المستخدمين بمزودي الخدمات. لسنا مسؤولين عن الأضرار المباشرة أو غير المباشرة الناتجة عن استخدام خدماتنا.
+
+8. الخصوصية
+نجمع فقط البيانات الضرورية لتقديم خدماتنا. بيانات الموقع تُستخدم فقط لتتبع الرحلات والتوصيل.
+
+9. التعديلات
+نحتفظ بحق تحديث هذه الشروط. الاستمرار في الاستخدام بعد التحديث يعتبر قبولاً.
+
+10. القانون الحاكم
+تحكم هذه الشروط قوانين الصومال. تُحل النزاعات في لاسعانود.
+
+تواصل: support@eazyride.so
+`;
+
 export default function TermsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { i18n } = useTranslation();
-  const isSo = i18n.language === 'so';
+  const lang = i18n.language;
+
+  const title = lang === 'ar' ? 'الشروط والأحكام' : lang === 'so' ? "Shuruudaha & Qaa'dada" : 'Terms & Conditions';
+  const content = lang === 'ar' ? TERMS_AR : lang === 'so' ? TERMS_SO : TERMS_EN;
+  const closeText = lang === 'ar' ? 'إغلاق' : lang === 'so' ? 'Xir' : 'Close';
 
   return (
     <AnimatePresence>
@@ -103,16 +147,16 @@ export default function TermsModal({ open, onClose }: { open: boolean; onClose: 
             className="bg-navy-800 border border-navy-500/60 rounded-3xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-8 shadow-2xl"
           >
             <h2 className="text-2xl font-bold text-gold mb-6">
-              {isSo ? "Shuruudaha & Qaa'dada" : 'Terms & Conditions'}
+              {title}
             </h2>
-            <pre className="text-sm text-gray-300 whitespace-pre-wrap font-sans leading-relaxed">
-              {isSo ? TERMS_SO : TERMS_EN}
+            <pre className="text-sm text-gray-300 whitespace-pre-wrap font-sans leading-relaxed" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+              {content}
             </pre>
             <button
               onClick={onClose}
               className="mt-6 w-full bg-gradient-to-r from-gold to-copper text-navy-900 font-bold py-3 rounded-2xl hover:opacity-90 transition-opacity cursor-pointer"
             >
-              {isSo ? 'Xir' : 'Close'}
+              {closeText}
             </button>
           </motion.div>
         </motion.div>

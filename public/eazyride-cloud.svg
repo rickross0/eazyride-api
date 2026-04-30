@@ -1,0 +1,15 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' width='200' height='200'>
+  <defs>
+    <linearGradient id='bg' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' style='stop-color:#0a1428'/>
+      <stop offset='100%' style='stop-color:#1a263c'/>
+    </linearGradient>
+  </defs>
+  <rect width='200' height='200' rx='30' fill='url(#bg)'/>
+  <!-- Cloud shape -->
+  <path d='M40 130 Q40 90 70 80 Q60 50 95 55 Q120 30 150 50 Q180 45 175 80 Q195 90 185 115 Q190 140 165 145 L50 145 Q25 145 30 125 Z' fill='#00bcd4' opacity='0.9'/>
+  <!-- Horse silhouette (gold) -->
+  <path d='M100 75 Q95 55 105 45 Q115 35 125 40 L130 38 Q128 45 132 50 Q138 55 135 65 L140 70 Q142 75 138 78 L132 80 Q128 85 125 90 L120 95 Q118 98 115 95 L112 90 Q110 95 108 100 L100 75Z' fill='#ffd700'/>
+  <!-- EazyRide text -->
+  <text x='100' y='170' text-anchor='middle' fill='#ffd700' font-family='Inter, sans-serif' font-weight='900' font-size='20'>EazyRide</text>
+</svg>
