@@ -1,0 +1,20 @@
+const express = require('express');
+const router = express.Router();
+const driverCtrl = require('../controllers/driverController');
+const { authMiddleware, roleMiddleware, attachUser } = require('../middleware/auth');
+const { cache } = require('../middleware/cache');
+const upload = require('../middleware/upload');
+
+router.get('/profile', authMiddleware, roleMiddleware('DRIVER'), attachUser, driverCtrl.getProfile);
+router.post('/register', authMiddleware, attachUser, driverCtrl.registerDriver);
+router.put('/profile', authMiddleware, roleMiddleware('DRIVER'), attachUser, driverCtrl.updateProfile);
+router.post('/online', authMiddleware, roleMiddleware('DRIVER'), attachUser, driverCtrl.goOnline);
+router.post('/offline', authMiddleware, roleMiddleware('DRIVER'), attachUser, driverCtrl.goOffline);
+router.get('/earnings', authMiddleware, roleMiddleware('DRIVER'), attachUser, driverCtrl.earnings);
+router.put('/payout-info', authMiddleware, roleMiddleware('DRIVER'), attachUser, driverCtrl.updatePayoutInfo);
+router.put('/push-token', authMiddleware, roleMiddleware('DRIVER'), attachUser, driverCtrl.updatePushToken);
+router.put('/can-deliver', authMiddleware, roleMiddleware('DRIVER'), attachUser, driverCtrl.updateCanDeliver);
+router.post('/documents', authMiddleware, roleMiddleware('DRIVER'), attachUser, upload.single('document'), driverCtrl.uploadDocument);
+router.get('/approval-status', authMiddleware, roleMiddleware('DRIVER'), attachUser, driverCtrl.approvalStatus);
+router.get('/nearby', authMiddleware, cache('nearbyDrivers', 30), driverCtrl.nearbyDrivers);
+module.exports = router;

@@ -1,0 +1,16 @@
+{
+  "name": "EazyRide + Haye!",
+  "short_name": "EazyRide",
+  "description": "Fast & Safe Rides, Delicious Food, Reliable Cars — Laascaanood's #1 Super-App",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1428",
+  "theme_color": "#0a1428",
+  "icons": [
+    {
+      "src": "/eazyride-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
