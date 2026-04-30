@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Download, Smartphone, MapPin, Clock, FileText, HelpCircle, X } from 'lucide-react';
 import Particles, { initParticlesEngine } from '@tsparticles/react';
@@ -8,6 +8,7 @@ import type { ISourceOptions } from '@tsparticles/engine';
 import confetti from 'canvas-confetti';
 import { useInView } from 'react-intersection-observer';
 import TermsModal from './TermsModal';
+import gsap from './gsap-utils';
 
 const RELEASE_BASE = 'https://github.com/rickross0/EazyRide-Haye-APKs/releases/download/v3.0.0/';
 
@@ -293,8 +294,62 @@ function NewsletterPopup() {
 
 /* ─── Epic Hero SVG (Pure Framer Motion — No GSAP Conflicts) ─── */
 function HeroSVG({ lang }: { lang: string }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const handshakeRef = useRef<SVGPathElement>(null);
+  const mapRef = useRef<SVGPathElement>(null);
+  const pinRef = useRef<SVGCircleElement>(null);
+
+  // GSAP timeline starts AFTER Framer Motion entrance animations finish (~3s)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!handshakeRef.current || !mapRef.current || !pinRef.current) return;
+
+      // Handshake arm shakes: animate SVG path d attribute
+      const armTl = gsap.timeline({ repeat: -1, yoyo: true });
+      armTl.to(handshakeRef.current, {
+        attr: { d: "M160 255 Q200 230 240 255" },
+        duration: 0.8,
+        ease: "power2.inOut",
+      }).to(handshakeRef.current, {
+        attr: { d: "M160 245 Q200 250 240 245" },
+        duration: 0.8,
+        ease: "power2.inOut",
+      });
+
+      // Somalia map pulses scale + glow
+      const mapTl = gsap.timeline({ repeat: -1, yoyo: true });
+      mapTl.to(mapRef.current, {
+        scale: 1.3,
+        duration: 1,
+        ease: "power2.out",
+        transformOrigin: "220px 280px",
+      }).to(mapRef.current, {
+        scale: 1,
+        duration: 0.8,
+        ease: "power2.inOut",
+        transformOrigin: "220px 280px",
+      });
+
+      // Pin pulses radius
+      const pinTl = gsap.timeline({ repeat: -1, yoyo: true });
+      pinTl.to(pinRef.current, {
+        attr: { r: 9 },
+        duration: 0.5,
+        ease: "power2.out",
+      }).to(pinRef.current, {
+        attr: { r: 5 },
+        duration: 0.4,
+        ease: "power2.in",
+      });
+
+      return () => { armTl.kill(); mapTl.kill(); pinTl.kill(); };
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleMapHover = () => {
-    confetti({ particleCount: 50, spread: 360, startVelocity: 30, colors: ['#ffd700', '#00bcd4'], origin: { x: 0.5, y: 0.7 } });
+    confetti({ particleCount: 50, spread: 360, startVelocity: 30, colors: ["#ffd700", "#00bcd4"], origin: { x: 0.5, y: 0.7 } });
   };
 
   return (
@@ -305,7 +360,7 @@ function HeroSVG({ lang }: { lang: string }) {
       whileHover={{ scale: 1.03 }}
       className="w-[300px] h-[300px] md:w-[500px] md:h-[500px] pointer-events-auto select-none"
     >
-      <svg viewBox="0 0 500 500" className="w-full h-full drop-shadow-2xl cursor-grab active:cursor-grabbing">
+      <svg ref={svgRef} viewBox="0 0 500 500" className="w-full h-full drop-shadow-2xl cursor-grab active:cursor-grabbing">
         <defs>
           <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#ffd700" stopOpacity="0.8" />
@@ -346,41 +401,31 @@ function HeroSVG({ lang }: { lang: string }) {
             style={{ transformOrigin: "250px 250px" }} />
         ))}
 
-        {/* ── Somalia Map: EMERGE + PULSE ── */}
+        {/* ── Somalia Map: GSAP scale pulse (Framer Motion handles entrance only) ── */}
         <motion.path
+          ref={mapRef}
           d="M180 280 Q200 300 220 290 Q240 300 260 280 Q240 260 220 270 Q200 260 180 280 Z M190 285 L230 285 Q220 295 210 290 Z"
           fill="#ffd700" stroke="#b8860b" strokeWidth="2"
-          style={{ transformOrigin: "220px 280px", cursor: "pointer" }}
+          style={{ transformOrigin: "220px 280px", cursor: "pointer", filter: "drop-shadow(0 0 8px #ffd700)" }}
           initial={{ scale: 0, opacity: 0 }}
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: 1,
-            filter: [
-              "drop-shadow(0 0 5px #ffd700)",
-              "drop-shadow(0 0 25px #ffd700)",
-              "drop-shadow(0 0 5px #ffd700)",
-            ],
-          }}
-          transition={{
-            scale: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.5 },
-            opacity: { duration: 0.5, delay: 1.5 },
-            filter: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.5 },
-          }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", delay: 1.5 }}
           whileHover={{ scale: 1.5, filter: "drop-shadow(0 0 30px #ffd700)", transition: { duration: 0.2 } }}
           onHoverStart={handleMapHover}
           onClick={() => alert("Laascaanood — Our Hub! 🚀")}
         />
 
-        {/* ── Laascaanood Pin: PULSE ── */}
+        {/* ── Laascaanood Pin: GSAP radius pulse (Framer Motion handles entrance only) ── */}
         <motion.circle
+          ref={pinRef}
           cx="205" cy="290" r="5" fill="#00bcd4" className="glow-cyan"
           initial={{ scale: 0 }}
-          animate={{ scale: [1, 1.8, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 1.8, duration: 0.5 }}
           style={{ transformOrigin: "205px 290px" }}
         />
 
-        {/* ── Handshake + Horses: ARM SHAKES ── */}
+        {/* ── Handshake + Horses ── */}
         <motion.g
           animate={{ rotate: [-3, 3, -3, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -400,26 +445,12 @@ function HeroSVG({ lang }: { lang: string }) {
             animate={{ y: [0, 3, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
           />
-          {/* Handshake Arm — WAVES up and down */}
-          <motion.path
+          {/* Handshake Arm — GSAP animates path d after 3s delay */}
+          <path
+            ref={handshakeRef}
             d="M160 250 Q200 240 240 250"
             stroke="#ffd700" strokeWidth="18" strokeLinecap="round" fill="none"
             className="glow-gold"
-            animate={{
-              d: [
-                "M160 250 Q200 240 240 250",
-                "M160 255 Q200 230 240 255",
-                "M160 250 Q200 240 240 250",
-                "M160 245 Q200 250 240 245",
-                "M160 250 Q200 240 240 250",
-              ],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 1,
-            }}
           />
         </motion.g>
 
