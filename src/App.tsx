@@ -15,19 +15,26 @@ const particleOptions: ISourceOptions = {
   fullScreen: { enable: false },
   background: { color: { value: 'transparent' } },
   particles: {
-    number: { value: 60 },
+    number: { value: 80 },
     color: { value: ['#ffd700', '#00bcd4', '#cd7f32'] },
     shape: { type: 'star' },
-    opacity: { value: { min: 0.2, max: 0.5 }, animation: { enable: true, speed: 0.5 } },
-    size: { value: { min: 1, max: 3 } },
-    move: { enable: true, speed: 0.8, direction: 'none' as const, random: true, outModes: 'out' as const }
+    opacity: { value: { min: 0.2, max: 0.6 }, animation: { enable: true, speed: 0.5 } },
+    size: { value: { min: 1, max: 4 } },
+    move: {
+      enable: true,
+      speed: 1.2,
+      direction: 'none' as const,
+      random: true,
+      outModes: 'out' as const,
+      attract: { enable: true }
+    }
   },
   interactivity: {
     events: {
       onHover: { enable: true, mode: 'repulse' },
       onClick: { enable: true, mode: 'push' }
     },
-    modes: { repulse: { distance: 100 }, push: { quantity: 2 } }
+    modes: { repulse: { distance: 120 }, push: { quantity: 3 } }
   }
 };
 
@@ -42,82 +49,181 @@ const fadeUp = {
 };
 
 /* ─── Hero ─── */
-function Hero() {
+function Hero({ lang }: { lang: string }) {
   const { t } = useTranslation();
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 0.3], [0, -80]);
+  const svgY = useTransform(scrollYProgress, [0, 0.4], [0, -120]);
 
   return (
     <section className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-700 to-black relative overflow-hidden">
       <Particles id="hero-particles" options={particleOptions} className="absolute inset-0 z-0" />
 
+      {/* Epic Hero SVG */}
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 1.5, type: 'spring' }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 md:w-96 h-72 md:h-96 z-10 pointer-events-none select-none"
+        initial={{ scale: 0.5, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ duration: 2, type: 'spring', damping: 10 }}
+        whileHover={{ scale: 1.05 }}
+        style={{ y: svgY }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[500px] md:h-[500px] z-10 pointer-events-none select-none"
       >
-        <svg viewBox="0 0 400 400" className="w-full h-full">
+        <svg viewBox="0 0 500 500" className="w-full h-full drop-shadow-2xl">
+          <defs>
+            <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffd700" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#b8860b" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="cyanGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#00bcd4" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#008ba3" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {/* Frame Border (Brass/Gem Style) */}
+          <motion.rect
+            width="500" height="500" rx="20" fill="none" stroke="#8b4513" strokeWidth="15" strokeLinecap="round"
+            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2.5 }}
+          />
+          <g stroke="#00bcd4" strokeWidth="8" strokeLinecap="round" fill="none">
+            <motion.line x1="50" y1="50" x2="450" y2="450"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, delay: 0.5 }}
+            />
+            <motion.line x1="50" y1="450" x2="450" y2="50"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, delay: 0.7 }}
+            />
+          </g>
+
+          {/* Stars/Gems on Corners */}
+          <motion.g
+            animate={{ rotate: [0, 360] }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'linear' as const }}
+            style={{ transformOrigin: '250px 250px' }}
+          >
+            <circle cx="60" cy="60" r="25" fill="#9932cc" className="glow-cyan" />
+            <circle cx="440" cy="60" r="25" fill="#9932cc" className="glow-gold" />
+            <circle cx="60" cy="440" r="25" fill="#00bcd4" className="glow-cyan" />
+            <circle cx="440" cy="440" r="25" fill="#ffd700" className="glow-gold" />
+          </motion.g>
+
+          {/* Cosmic Orbit Rings */}
           <motion.circle
-            cx="200" cy="200" r="180" fill="none" stroke="#00bcd4" strokeWidth="2"
-            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2 }}
+            cx="250" cy="250" r="180" fill="none" stroke="#00bcd4" strokeWidth="3" strokeDasharray="10 5"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 30, repeat: Infinity, ease: 'linear' as const }}
+            style={{ transformOrigin: '250px 250px' }}
           />
           <motion.circle
-            cx="200" cy="200" r="150" fill="none" stroke="#ffd700" strokeWidth="1.5" strokeDasharray="8 4"
-            initial={{ rotate: 0 }} animate={{ rotate: 360 }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' as const }}
-            style={{ transformOrigin: '200px 200px' }}
+            cx="250" cy="250" r="220" fill="none" stroke="#ffd700" strokeWidth="2" opacity="0.6"
+            animate={{ rotate: -360 }}
+            transition={{ duration: 40, repeat: Infinity, ease: 'linear' as const }}
+            style={{ transformOrigin: '250px 250px' }}
           />
+
+          {/* Somalia Map (Somaliland Golden, Pulsing) */}
           <motion.path
-            d="M100 250 Q150 200 200 220 Q250 200 300 250"
-            stroke="#ffd700" strokeWidth="12" fill="none" strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 1.5, delay: 0.5 }}
-            className="glow-gold"
+            d="M180 280 Q200 300 220 290 Q240 300 260 280 Q240 260 220 270 Q200 260 180 280 Z M190 285 L230 285 Q220 295 210 290 Z"
+            fill="#ffd700" stroke="#b8860b" strokeWidth="2"
+            className="glow-gold cursor-pointer"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', delay: 1.5 }}
+            whileHover={{ scale: 1.3, filter: 'drop-shadow(0 0 20px #ffd700)' }}
+            onClick={() => alert('Laascaanood — Our Hub! 🚀')}
+            style={{ transformOrigin: '220px 280px' }}
           />
-          <motion.g
-            animate={{ rotate: [-5, 5, -5] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' as const }}
-            style={{ transformOrigin: '100px 160px' }}
-          >
-            <path d="M80 180 Q60 160 80 140 Q100 130 120 140 Q140 160 120 180 Z" fill="#cd7f32" />
-          </motion.g>
-          <motion.g
-            animate={{ rotate: [5, -5, 5] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' as const }}
-            style={{ transformOrigin: '300px 160px' }}
-          >
-            <path d="M280 180 Q300 160 280 140 Q260 130 240 140 Q220 160 240 180 Z" fill="#ffd700" />
-          </motion.g>
-          {/* Cloud-white horse accent */}
-          <motion.g
-            animate={{ rotate: [3, -3, 3] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
-            style={{ transformOrigin: '260px 130px' }}
-          >
-            <path d="M240 145 Q255 115 270 130 Q280 145 265 155 Z" fill="rgba(255,255,255,0.6)" />
-          </motion.g>
-          <motion.path
-            d="M150 220 Q170 240 190 230 Q210 240 230 220 Q210 200 190 210 Q170 200 150 220 Z"
-            fill="#ffd700" opacity="0.8"
-            initial={{ scale: 0 }} animate={{ scale: 1 }}
-            transition={{ delay: 1.2, type: 'spring' }}
-            style={{ transformOrigin: '190px 220px' }}
-          />
+          {/* Laascaanood Pin */}
           <motion.circle
-            cx="190" cy="215" r="5" fill="#00bcd4"
-            animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+            cx="205" cy="290" r="5" fill="#00bcd4" className="glow-cyan"
+            animate={{ scale: [1, 1.5, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
-          <text x="200" y="340" textAnchor="middle" fill="#ffd700" fontSize="22" fontWeight="bold" fontFamily="Inter, sans-serif">
-            UNITY IS POWER
-          </text>
-          <text x="200" y="370" textAnchor="middle" fill="#ffd700" fontSize="14" fontFamily="Inter, sans-serif" opacity="0.8">
+
+          {/* Handshake + Horses (Bob/Shake) */}
+          <motion.g
+            animate={{ rotate: [-2, 2, -2, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' as const }}
+            style={{ transformOrigin: '250px 250px' }}
+          >
+            {/* Haye! Horse (Left — Copper) */}
+            <path
+              d="M120 220 Q100 200 120 180 Q140 170 160 180 Q180 200 160 220 Z M150 190 L170 195"
+              fill="#cd7f32" stroke="#b87333" strokeWidth="2" className="glow-copper"
+            />
+            {/* EazyRide Horse (Right — Gold) */}
+            <path
+              d="M320 220 Q340 200 320 180 Q300 170 280 180 Q260 200 280 220 Z M290 190 L270 195"
+              fill="#ffd700" stroke="#daa520" strokeWidth="2" className="glow-gold"
+            />
+            {/* Handshake Arms */}
+            <motion.path
+              d="M160 250 Q200 240 240 250"
+              stroke="#ffd700" strokeWidth="18" strokeLinecap="round" fill="none" className="glow-gold"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: [0, 1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            />
+          </motion.g>
+
+          {/* Arabic or English Unity Text */}
+          {lang === 'ar' ? (
+            <text x="250" y="80" textAnchor="middle" fill="#ffd700" fontSize="22" fontWeight="bold" className="glow-gold">
+              الوحدة قوة
+            </text>
+          ) : (
+            <motion.text
+              x="250" y="100" textAnchor="middle" fill="#ffd700" fontSize="20" fontWeight="bold" className="glow-gold"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2, duration: 1 }}
+            >
+              Unity is Power
+            </motion.text>
+          )}
+
+          {/* Powered by Somali */}
+          <motion.text
+            x="250" y="460" textAnchor="middle" fill="#ffd700" fontSize="16" opacity="0.9"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2.5, duration: 1 }}
+          >
             Powered by Somali
-          </text>
+          </motion.text>
+
+          {/* Bottom Camels + Trees (Trot In) */}
+          <motion.g
+            initial={{ x: -100 }}
+            animate={{ x: 0 }}
+            transition={{ delay: 2, duration: 1.5, type: 'spring' }}
+          >
+            <ellipse cx="150" cy="430" rx="20" ry="12" fill="#daa520" />
+            <path d="M140 410 Q150 420 160 415" fill="#cd853f" />
+            <ellipse cx="320" cy="430" rx="20" ry="12" fill="#daa520" />
+            <path d="M310 410 Q320 420 330 415" fill="#cd853f" />
+            <rect x="100" y="380" width="10" height="50" rx="5" fill="#228b22" />
+            <rect x="380" y="380" width="10" height="50" rx="5" fill="#228b22" />
+          </motion.g>
+
+          {/* Orbiting Planets (Cosmic) */}
+          <motion.g
+            animate={{ rotate: 360 }}
+            transition={{ duration: 15, repeat: Infinity, ease: 'linear' as const }}
+            style={{ transformOrigin: '250px 250px' }}
+          >
+            <circle cx="80" cy="120" r="8" fill="#00bcd4" className="glow-cyan" />
+          </motion.g>
+          <motion.g
+            animate={{ rotate: -360 }}
+            transition={{ duration: 18, repeat: Infinity, ease: 'linear' as const }}
+            style={{ transformOrigin: '250px 250px' }}
+          >
+            <circle cx="420" cy="120" r="6" fill="#ffd700" className="glow-gold" />
+          </motion.g>
         </svg>
       </motion.div>
 
+      {/* Main hero content */}
       <motion.div
         className="relative z-20 flex items-center justify-center min-h-screen px-4 text-white"
         style={{ y: heroY }}
@@ -128,15 +234,15 @@ function Hero() {
           transition={{ duration: 1 }}
           className="text-center max-w-4xl mx-auto"
         >
-          {/* Cloud EazyRide Logo */}
+          {/* Original Metallic EazyRide Logo */}
           <motion.img
-            src="/eazyride-cloud.png"
-            alt="EazyRide Cloud"
+            src="/eazyride-logo.png"
+            alt="EazyRide"
             className="w-24 md:w-32 mx-auto mb-8"
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, type: 'spring' }}
-            whileHover={{ scale: 1.15, rotate: 5 }}
+            whileHover={{ scale: 1.15, rotate: 360 }}
           />
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-gold via-cyan to-copper bg-clip-text text-transparent">
             {t('heroTitle')}
@@ -208,6 +314,7 @@ function Services() {
         </motion.h2>
 
         <div className="grid md:grid-cols-2 gap-12">
+          {/* EazyRide */}
           <motion.div
             initial={{ opacity: 0, x: -60 }}
             animate={inView ? { opacity: 1, x: 0 } : {}}
@@ -216,10 +323,10 @@ function Services() {
             className="bg-navy-700/60 backdrop-blur-xl p-10 rounded-3xl border border-cyan/30 hover:border-cyan/60 shadow-2xl group"
           >
             <motion.img
-              src="/eazyride-cloud.png"
-              alt="EazyRide Cloud"
+              src="/eazyride-logo.png"
+              alt="EazyRide"
               className="w-20 mx-auto mb-6 group-hover:animate-pulse"
-              whileHover={{ scale: 1.15, rotate: 5 }}
+              whileHover={{ scale: 1.15, rotate: 360 }}
             />
             <h3 className="text-3xl font-bold mb-6 text-cyan">{t('services.eazyride')}</h3>
             <ul className="space-y-3 text-lg opacity-90">
@@ -232,6 +339,7 @@ function Services() {
             </ul>
           </motion.div>
 
+          {/* Haye! */}
           <motion.div
             initial={{ opacity: 0, x: 60 }}
             animate={inView ? { opacity: 1, x: 0 } : {}}
@@ -240,9 +348,9 @@ function Services() {
             className="bg-navy-700/60 backdrop-blur-xl p-10 rounded-3xl border border-gold/30 hover:border-gold/60 shadow-2xl group"
           >
             <img
-              src="/haye-green.png"
+              src="/haye-logo.png"
               alt="Haye!"
-              className="w-32 mx-auto mb-8 filter brightness-0 invert group-hover:brightness-100 group-hover:invert-0 transition-all duration-500"
+              className="w-20 mx-auto mb-6 group-hover:animate-pulse"
             />
             <h3 className="text-3xl font-bold mb-6 text-gold">{t('services.haye')}</h3>
             <ul className="space-y-3 text-lg opacity-90">
@@ -257,7 +365,7 @@ function Services() {
   );
 }
 
-/* ─── Benefits (v5) ─── */
+/* ─── Benefits ─── */
 function Benefits() {
   const { t } = useTranslation();
   const roles = ['rider', 'driver', 'store', 'provider'];
@@ -365,7 +473,14 @@ function Downloads() {
     link.href = `${RELEASE_BASE}${file}`;
     link.target = '_blank';
     link.click();
-    confetti({ angle: 90, spread: 45, particleCount: 80, colors: ['#ffd700', '#00bcd4', '#cd7f32'], origin: { y: 0.7 } });
+    confetti({
+      angle: 90,
+      spread: 55,
+      particleCount: 100,
+      colors: ['#ffd700', '#00bcd4'],
+      shapes: ['star'] as any,
+      origin: { y: 0.7 }
+    });
   }, [termsAccepted]);
 
   return (
@@ -454,7 +569,6 @@ export default function App() {
     }).then(() => setParticlesReady(true));
   }, []);
 
-  // RTL support: switch dir when language changes
   useEffect(() => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
@@ -466,13 +580,12 @@ export default function App() {
       <nav className="fixed top-0 w-full bg-navy-900/95 backdrop-blur-xl z-50 px-4 py-4 border-b border-navy-500/50">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <motion.img
-            src="/eazyride-cloud.png"
-            alt="EazyRide Cloud"
-            className="w-16 cursor-pointer"
-            whileHover={{ scale: 1.15, rotate: 5 }}
+            src="/eazyride-logo.png"
+            alt="EazyRide"
+            className="w-14 cursor-pointer"
+            whileHover={{ scale: 1.2, rotate: 360 }}
             transition={{ duration: 0.5 }}
           />
-          {/* Language selector: 3 buttons (EN/SO/AR) */}
           <motion.div className="flex space-x-2 rtl:space-x-reverse">
             <button
               onClick={() => setLang('en')}
@@ -496,7 +609,7 @@ export default function App() {
         </div>
       </nav>
 
-      {particlesReady && <Hero />}
+      {particlesReady && <Hero lang={lang} />}
       <Services />
       <Benefits />
       <Downloads />
