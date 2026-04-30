@@ -12,10 +12,10 @@ const resources = {
       services: {
         title: 'Our Services',
         eazyride: 'EazyRide: Rides & Food Delivery',
-        haye: 'Haye!: Car Rental & Services',
+        haye: 'Haye! Services',
         desc1: 'Real-time Bajaj rides in Laascaanood.',
         desc2: 'Fresh meals delivered fast.',
-        desc3: 'Premium cars with escrow safety.'
+        desc3: 'Rent a car · Request water · Request handyman · Post your service free',
       },
       downloads: {
         title: 'Download Now (Android)',
@@ -112,10 +112,10 @@ const resources = {
       services: {
         title: 'Adeegyadayada',
         eazyride: 'EazyRide: Raacyada & Gaadiidka Cunnada',
-        haye: 'Haye!: Kirada Gaadiidka & Adeegyada',
+        haye: 'Haye! Adeegyada',
         desc1: 'Raac Bajaj ee Laascaanood ee wakhtiga dhabta ah.',
         desc2: 'Cunto cusub oo degdeg loo keenayo.',
-        desc3: 'Gaadiidka premium oo leh ammaan escrow.'
+        desc3: 'Kiree gaari · Dalbi biyo · Dalbi farsamo · Ku daar adeeggaaga bilaash',
       },
       downloads: {
         title: 'Hadda Soo Degso (Android)',
@@ -212,10 +212,10 @@ const resources = {
       services: {
         title: 'خدماتنا',
         eazyride: 'إيزي رايد: رحلات وتوصيل طعام',
-        haye: 'هاي!: استئجار سيارات وخدمات',
+        haye: 'هاي! خدمات',
         desc1: 'رحلات باچاج فورية في لاسعانود.',
         desc2: 'وجبات طازجة سريعة التوصيل.',
-        desc3: 'سيارات فاخرة مع حماية الإيداع.'
+        desc3: 'استأجر سيارة · اطلب ماء · اطلب حرفي · أعلن عن خدمتك مجانا',
       },
       downloads: {
         title: 'حمل الآن (أندرويد)',
