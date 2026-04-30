@@ -14,8 +14,9 @@ services:
     runtime: node
     plan: free
     region: oregon
+    rootDir: api
     buildCommand: npm install && npx prisma generate
-    startCommand: node -e "require('./src/db/ensureSchema.js').ensureSchema().then(() => { const { execSync } = require('child_process'); execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' }); execSync('node prisma/seed.js', { stdio: 'inherit' }); require('./src/server.js'); })"
+    startCommand: node src/db/ensureSchema.js && npx prisma db push --accept-data-loss && node prisma/seed.js && node src/server.js
     envVars:
       - key: NODE_ENV
         value: production
