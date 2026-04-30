@@ -480,9 +480,6 @@ function Hero({ lang }: { lang: string }) {
 
       <motion.div className="relative z-20 flex items-center justify-center min-h-screen px-4 text-white" style={{ y: heroY }}>
         <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }} className="text-center max-w-4xl mx-auto">
-          <motion.img src="/EazyRide-logo-removebg-preview.png" alt="EazyRide" className="w-24 md:w-32 mx-auto mb-8"
-            initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, type: 'spring' }}
-            whileHover={{ scale: 1.15, rotate: 360 }} />
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-gold via-cyan to-copper bg-clip-text text-transparent">{t('heroTitle')}</h1>
           <p className="text-xl md:text-2xl mb-10 opacity-90">{t('heroSub')}</p>
           <motion.div className="flex flex-wrap justify-center gap-4" variants={stagger} initial="hidden" animate="visible">
@@ -715,7 +712,7 @@ export default function App() {
 
       <nav className="fixed top-0 w-full bg-navy-900/95 backdrop-blur-xl z-50 px-4 py-4 border-b border-navy-500/50">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <motion.img src="/EazyRide-logo-removebg-preview.png" alt="EazyRide" className="w-14 cursor-pointer"
+          <motion.img src="/EazyRide-logo-removebg-preview.png" alt="EazyRide" className="w-20 md:w-24 cursor-pointer"
             whileHover={{ scale: 1.2, rotate: 360 }} transition={{ duration: 0.5 }} />
           <motion.div className="flex space-x-2 rtl:space-x-reverse">
             <button onClick={() => handleLangSwitch('en')} className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${lang === 'en' ? 'bg-gold text-navy-900 glow-pulse' : 'bg-navy-700 text-white hover:bg-navy-500'}`}>{t('switchEn')}</button>
