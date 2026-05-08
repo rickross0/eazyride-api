@@ -8,9 +8,15 @@ import type { ISourceOptions } from '@tsparticles/engine';
 import confetti from 'canvas-confetti';
 import { useInView } from 'react-intersection-observer';
 import TermsModal from './TermsModal';
+import LegalPage from './LegalPage';
 import gsap from './gsap-utils';
 
 const RELEASE_BASE = 'https://github.com/rickross0/EazyRide-Haye-APKs/releases/download/v3.0.0/';
+import ThreeGlobe from './ThreeGlobe';
+import VoiceNarrator from './VoiceNarrator';
+import AIChatbot from './AIChatbot';
+import { Badges, InfiniteTestimonials } from './EngagementHud';
+import ThemeToggle from './ThemeToggle';
 
 const particleOptions: ISourceOptions = {
   fullScreen: { enable: false },
@@ -123,6 +129,7 @@ function ProgressBar() {
     <div className="fixed bottom-6 left-6 right-6 bg-navy-900/80 backdrop-blur-xl rounded-full h-2 z-40 overflow-hidden">
       <motion.div className="h-full bg-gradient-to-r from-gold to-cyan glow-gold"
         animate={{ width: `${progress * 100}%` }} transition={{ ease: 'easeOut' }} />
+      
     </div>
   );
 }
@@ -148,6 +155,7 @@ function UnityMeter() {
         </div>
         <p className="text-gold text-xs font-bold mt-1">{fill}%</p>
       </div>
+      
     </div>
   );
 }
@@ -163,6 +171,7 @@ function Ticker() {
   return (
     <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-gold text-navy-900 px-6 py-2 rounded-full font-bold z-30 text-sm shadow-xl animate-ticker">
       ⭐ {users.toLocaleString()} {i18n.language === 'ar' ? 'راكب ومتزايد!' : i18n.language === 'so' ? 'Rider oo koraya!' : 'Riders & Growing!'}
+      
     </div>
   );
 }
@@ -645,7 +654,7 @@ function Benefits() {
 }
 
 /* ─── Downloads ─── */
-function Downloads() {
+function Downloads({ onOpenLegal }: { onOpenLegal: () => void }) {
   const { t } = useTranslation();
   const [ref, inView] = useInView({ threshold: 0.2, triggerOnce: true });
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -654,10 +663,10 @@ function Downloads() {
   const [downloadCount, setDownloadCount] = useState(0);
 
   const apks = [
-    { name: t('downloads.rider'), file: 'EazyRide-Rider-v3.0.0.apk', size: '37 MB' },
+    { name: t('downloads.rider'), file: 'EazyRide-Rider-v3.0.0.apk', size: '87 MB' },
     { name: t('downloads.driver'), file: 'EazyRide-Driver-v3.0.0.apk', size: '37 MB' },
-    { name: t('downloads.store'), file: 'EazyRide-StoreOwner-v3.0.0.apk', size: '187 MB' },
-    { name: t('downloads.provider'), file: 'EazyRide-Provider-v3.0.0.apk', size: '68 MB' }
+    { name: t('downloads.store'), file: 'EazyRide-StoreOwner-v3.0.0.apk', size: '87 MB' },
+    { name: t('downloads.provider'), file: 'EazyRide-Provider-v3.0.0.apk', size: '38 MB' }
   ];
 
   const handleDownload = useCallback((file: string) => {
@@ -702,7 +711,7 @@ function Downloads() {
         </div>
         <p className="text-center mt-12 text-lg opacity-75 text-white">Android 10+ | Secure EVC Payments | Made in Somalia 🇸🇴</p>
       </div>
-      <TermsModal open={showTerms} onClose={() => setShowTerms(false)} />
+      <TermsModal open={showTerms} onClose={() => setShowTerms(false)} onOpenLegal={onOpenLegal} />
     </section>
   );
 }
@@ -712,6 +721,17 @@ export default function App() {
   const { t, i18n } = useTranslation();
   const [lang, setLang] = useState('en');
   const [particlesReady, setParticlesReady] = useState(false);
+  const [showLegal, setShowLegal] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const update = () => {
+      const scrolled = window.scrollY / (document.body.scrollHeight - window.innerHeight || 1);
+      setScrollProgress(Math.min(1, Math.max(0, scrolled)));
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
 
   useEffect(() => {
     initParticlesEngine(async (engine) => { await loadSlim(engine); }).then(() => setParticlesReady(true));
@@ -737,6 +757,11 @@ export default function App() {
       <Quiz lang={lang} />
       <NewsletterPopup />
 
+      <VoiceNarrator lang={lang} />
+      <ThemeToggle />
+      <Badges scrollProgress={scrollProgress} />
+      <AIChatbot lang={lang} />
+
       {/* Global Starfield */}
       {particlesReady && <Particles id="starfield" options={starfieldOptions} className="fixed inset-0 z-0 pointer-events-none" />}
 
@@ -752,14 +777,61 @@ export default function App() {
         </div>
       </nav>
 
-      {particlesReady && <Hero lang={lang} />}
+      <ThreeGlobe />
+      <Hero lang={lang} />
       <Services />
       <Benefits />
-      <Downloads />
+      <Downloads onOpenLegal={() => setShowLegal(true)} />
 
-      <footer className="py-16 bg-navy-900 text-center text-gray-400 border-t border-navy-500/50">
-        <p>&copy; 2026 EazyRide + Haye! | Laascaanood Pride | <a href="mailto:support@eazyride.so" className="text-gold hover:underline">Contact</a></p>
+      <InfiniteTestimonials />
+      <footer className="py-16 bg-navy-900 text-gray-400 border-t border-navy-500/50">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+            <div>
+              <h4 className="text-gold font-bold mb-3">{t('footer.legal')}</h4>
+              <ul className="space-y-1.5 text-sm">
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.terms')}</button></li>
+                <li><button onClick={() => { setShowLegal(true); }} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.privacy')}</button></li>
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.eula')}</button></li>
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.aup')}</button></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-gold font-bold mb-3">{t('footer.legal')}</h4>
+              <ul className="space-y-1.5 text-sm">
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.rider')}</button></li>
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.driver')}</button></li>
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.restaurant')}</button></li>
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.carrental')}</button></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-gold font-bold mb-3">{t('footer.legal')}</h4>
+              <ul className="space-y-1.5 text-sm">
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.refund')}</button></li>
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.databreach')}</button></li>
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.aml')}</button></li>
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.community')}</button></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-gold font-bold mb-3">{t('footer.legal')}</h4>
+              <ul className="space-y-1.5 text-sm">
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.dispute')}</button></li>
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.dpa')}</button></li>
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.admin')}</button></li>
+                <li><button onClick={() => setShowLegal(true)} className="hover:text-gold transition-colors cursor-pointer text-left">{t('footer.forcemajeure')}</button></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-navy-500/40 pt-6 text-center">
+            <p className="text-sm">{t('footer.copyright')}</p>
+            <p className="text-xs mt-1 text-gray-500">{t('footer.operated')}</p>
+            <p className="text-xs mt-1 text-gray-500">{t('footer.madeIn')} | <a href="mailto:support@eazyride.com" className="text-gold hover:underline">support@eazyride.com</a></p>
+          </div>
+        </div>
       </footer>
+      <LegalPage open={showLegal} onClose={() => setShowLegal(false)} />
     </div>
   );
 }
