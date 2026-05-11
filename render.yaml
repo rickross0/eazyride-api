@@ -16,7 +16,7 @@ services:
     region: oregon
     rootDir: api
     buildCommand: npm install && npx prisma generate
-    startCommand: node src/db/ensureSchema.js && npx prisma db push --accept-data-loss && node prisma/seed.js && node src/server.js
+    startCommand: node src/db/ensureSchema.js && node src/server.js
     envVars:
       - key: NODE_ENV
         value: production

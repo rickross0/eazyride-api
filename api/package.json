@@ -11,7 +11,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "build": "prisma generate",
-    "render-start": "node -e \"require('./src/db/ensureSchema.js').ensureSchema().then(() => { const { execSync } = require('child_process'); execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' }); execSync('node prisma/seed.js', { stdio: 'inherit' }); require('./src/server.js'); })\"",
+    "render-start": "node src/db/ensureSchema.js && node src/server.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
