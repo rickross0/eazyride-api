@@ -991,3 +991,25 @@ model LegalDocument {
   version   String
   updatedAt DateTime @updatedAt
 }
+
+model ServiceLead {
+  id          String   @id @default(cuid())
+  customerId  String
+  providerId  String?
+  serviceType String
+  description String
+  location    String?
+  phone       String?
+  status      String   @default("PENDING")
+  quotedPrice Float?
+  finalPrice  Float?
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+
+
+  @@index([customerId])
+  @@index([providerId])
+  @@index([status])
+}

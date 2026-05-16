@@ -339,4 +339,29 @@ router.put('/:id/approve', authMiddleware, roleMiddleware('ADMIN', 'SUPER_ADMIN'
   } catch (err) { res.status(500).json({ error: 'Failed to approve provider' }); }
 });
 
+
+// ── Create Service Lead (for riders/customers) ──────────────
+router.post('/leads', authMiddleware, async (req, res) => {
+  try {
+    const { serviceType, description, location, phone } = req.body;
+    if (!serviceType || !description) {
+      return res.status(400).json({ error: 'serviceType and description are required' });
+    }
+    const lead = await prisma.serviceLead.create({
+      data: {
+        customerId: req.userId,
+        serviceType,
+        description,
+        location: location || null,
+        phone: phone || null,
+        status: 'PENDING',
+      },
+    });
+    res.status(201).json({ success: true, lead });
+  } catch (err) {
+    console.error('Create lead error:', err);
+    res.status(500).json({ error: 'Failed to create service lead' });
+  }
+});
+
 module.exports = router;
