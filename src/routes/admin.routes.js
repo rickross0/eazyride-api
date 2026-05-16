@@ -145,7 +145,7 @@ router.get('/lottery/tickets', lotteryController.getLotteryStats);
 router.post('/lottery/tickets', requirePermission('MANAGE_SETTINGS'), (req, res) => res.status(501).json({ error: 'Creating tickets via admin is not supported' }));
 router.get('/lottery/winners', async (req, res, next) => {
   try {
-    const winners = await prisma.lotteryTicket.findMany({ where: { status: 'WINNER' }, include: { lottery: true, user: { select: { firstName: true, lastName: true, phone: true } } }, orderBy: { createdAt: 'desc' }, take: 50 });
+    const winners = await prisma.lotteryEntry.findMany({ where: { isWinner: true }, include: { lottery: true, user: { select: { firstName: true, lastName: true, phone: true } } }, orderBy: { createdAt: 'desc' }, take: 50 });
     res.json({ success: true, data: winners });
   } catch (err) { next(err); }
 });

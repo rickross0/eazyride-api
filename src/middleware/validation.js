@@ -136,8 +136,8 @@ const schemas = {
 
   createLottery: {
     title: { required: true, type: 'string' },
-    ticketPrice: { required: true, type: 'positiveNumber' },
-    maxTickets: { required: true, type: 'positiveNumber' },
+    entryLimit: { required: false, type: 'positiveNumber' },
+
     prizePool: { required: true, type: 'positiveNumber' },
     startDate: { required: true, type: 'string' },
     endDate: { required: true, type: 'string' },

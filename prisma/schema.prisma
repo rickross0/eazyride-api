@@ -126,7 +126,7 @@ enum TransactionType {
   COMMISSION
   PAYOUT
   LOTTERY_WIN
-  LOTTERY_TICKET
+  LOTTERY_ENTRY
 }
 
 enum PromotionType {
@@ -188,7 +188,7 @@ model User {
   chatsSent         Chat[]     @relation("ChatSender")
   chatsReceived     Chat[]     @relation("ChatReceiver")
   sosAlerts         SOSAlert[]
-  lotteryTickets    LotteryTicket[]
+  lotteryEntries    LotteryEntry[]
   auditLogs         AuditLog[]
   transactions      Transaction[] @relation("UserTransactions")
   promoCodesCreated PromoCode[] @relation("PromoCodeCreator")
@@ -755,9 +755,9 @@ model Lottery {
   id                String        @id @default(cuid())
   title             String
   description       String?
-  ticketPrice       Float
-  maxTickets        Int
-  soldTickets       Int           @default(0)
+  entryLimit        Int?
+
+  entryCount        Int           @default(0)
   prizePool         Float
   prizeDescription  String?
   prizeImageUrl     String?
@@ -766,34 +766,32 @@ model Lottery {
   drawDate          DateTime
   status            LotteryStatus @default(UPCOMING)
   winnerId          String?
-  winningTicket     String?
+
   termsAndConditions String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
-  tickets           LotteryTicket[]
+  entries           LotteryEntry[]
 
   @@index([status])
   @@index([startDate])
 }
 
-model LotteryTicket {
+model LotteryEntry {
   id          String    @id @default(cuid())
   lotteryId   String
   lottery     Lottery   @relation(fields: [lotteryId], references: [id], onDelete: Cascade)
   userId      String
   user        User      @relation(fields: [userId], references: [id])
-  ticketNumber String
-  totalPrice  Float
-  name        String?
+  entryNumber String
   isWinner    Boolean   @default(false)
-  purchasedAt DateTime  @default(now())
+  enteredAt   DateTime  @default(now())
   createdAt   DateTime  @default(now())
 
-  @@unique([lotteryId, ticketNumber])
+  @@unique([lotteryId, entryNumber])
   @@index([lotteryId])
   @@index([userId])
-  @@index([ticketNumber])
+  @@index([entryNumber])
 }
 
 // ============================================================

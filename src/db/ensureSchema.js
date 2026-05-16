@@ -239,7 +239,7 @@ async function ensureSchema() {
         "menuItemId" TEXT NOT NULL REFERENCES "MenuItem"(id),
         quantity INTEGER NOT NULL,
         "unitPrice" DOUBLE PRECISION NOT NULL,
-        "totalPrice" DOUBLE PRECISION NOT NULL,
+        
         notes TEXT,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT NOW()
       )`,
@@ -390,9 +390,9 @@ async function ensureSchema() {
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
         title TEXT NOT NULL,
         description TEXT,
-        "ticketPrice" DOUBLE PRECISION NOT NULL,
-        "maxTickets" INTEGER NOT NULL,
-        "soldTickets" INTEGER NOT NULL DEFAULT 0,
+        "entryLimit" INTEGER,
+        
+        "entryCount" INTEGER NOT NULL DEFAULT 0,
         "prizePool" DOUBLE PRECISION NOT NULL,
         "prizeDescription" TEXT,
         "prizeImageUrl" TEXT,
@@ -401,19 +401,19 @@ async function ensureSchema() {
         "drawDate" TIMESTAMP(3) NOT NULL,
         status TEXT NOT NULL DEFAULT 'UPCOMING',
         "winnerId" TEXT REFERENCES "User"(id),
-        "winningTicket" TEXT,
+        
         "termsAndConditions" TEXT,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT NOW(),
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT NOW()
       )`,
-      `CREATE TABLE IF NOT EXISTS "LotteryTicket" (
+      `CREATE TABLE IF NOT EXISTS "LotteryEntry" (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
         "lotteryId" TEXT NOT NULL REFERENCES "Lottery"(id) ON DELETE CASCADE,
         "userId" TEXT NOT NULL REFERENCES "User"(id),
-        "ticketNumber" TEXT NOT NULL,
-        "totalPrice" DOUBLE PRECISION NOT NULL,
+        "entryNumber" TEXT NOT NULL,
+        
         "isWinner" BOOLEAN NOT NULL DEFAULT false,
-        "purchasedAt" TIMESTAMP(3) NOT NULL DEFAULT NOW(),
+        "enteredAt" TIMESTAMP(3) NOT NULL DEFAULT NOW(),
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT NOW()
       )`,
       `CREATE TABLE IF NOT EXISTS "SavedAddress" (

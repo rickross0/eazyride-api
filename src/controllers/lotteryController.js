@@ -1,12 +1,11 @@
 // ============================================================
-// 🎰 Lottery Controller
+// 🎰 Lottery Controller — Promotional Giveaway for Drivers
 // ============================================================
 
 const { prisma } = require('../config/database');
 const { AppError } = require('../middleware/errorHandler');
 const { generateTicketNumber, paginationResponse, paginate } = require('../utils/helpers');
 const logger = require('../utils/logger');
-const { LOTTERY_STATUS } = require('../config/constants');
 
 // Get all lotteries
 exports.getLotteries = async (req, res, next) => {
@@ -25,28 +24,16 @@ exports.getLotteries = async (req, res, next) => {
         orderBy: { createdAt: 'desc' },
         include: {
           winner: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              phone: true
-            }
+            select: { id: true, firstName: true, lastName: true, phone: true }
           },
-          _count: {
-            select: { tickets: true }
-          }
+          _count: { select: { entries: true } }
         }
       }),
       prisma.lottery.count({ where })
     ]);
 
-    res.json({
-      success: true,
-      ...paginationResponse(lotteries, total, p, l)
-    });
-  } catch (error) {
-    next(error);
-  }
+    res.json({ success: true, ...paginationResponse(lotteries, total, p, l) });
+  } catch (error) { next(error); }
 };
 
 // Get active lottery
@@ -54,21 +41,11 @@ exports.getActiveLottery = async (req, res, next) => {
   try {
     const lottery = await prisma.lottery.findFirst({
       where: { status: 'ACTIVE' },
-      include: {
-        _count: {
-          select: { tickets: true }
-        }
-      },
+      include: { _count: { select: { entries: true } } },
       orderBy: { createdAt: 'desc' }
     });
-
-    res.json({
-      success: true,
-      data: lottery
-    });
-  } catch (error) {
-    next(error);
-  }
+    res.json({ success: true, data: lottery });
+  } catch (error) { next(error); }
 };
 
 // Get lottery by ID
@@ -78,322 +55,172 @@ exports.getLotteryById = async (req, res, next) => {
       where: { id: req.params.id },
       include: {
         winner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            phone: true,
-            avatar: true
-          }
+          select: { id: true, firstName: true, lastName: true, phone: true, avatar: true }
         },
-        tickets: {
+        entries: {
           take: 10,
-          orderBy: { purchasedAt: 'desc' },
+          orderBy: { enteredAt: 'desc' },
           include: {
             user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true
-              }
+              select: { id: true, firstName: true, lastName: true }
             }
           }
         },
-        _count: {
-          select: { tickets: true }
-        }
+        _count: { select: { entries: true } }
+      }
+    });
+    if (!lottery) throw new AppError('Lottery not found', 404);
+    res.json({ success: true, data: lottery });
+  } catch (error) { next(error); }
+};
+
+// Enter lottery (FREE — Drivers only)
+exports.enterLottery = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Verify user is a DRIVER
+    const driverProfile = await prisma.driverProfile.findUnique({
+      where: { userId },
+      select: { id: true, status: true }
+    });
+    if (!driverProfile) throw new AppError('Only drivers can enter the lottery', 403);
+    if (driverProfile.status !== 'APPROVED') throw new AppError('Driver must be approved to enter', 403);
+
+    const lottery = await prisma.lottery.findUnique({
+      where: { id },
+      include: { _count: { select: { entries: true } } }
+    });
+    if (!lottery) throw new AppError('Lottery not found', 404);
+    if (lottery.status !== 'ACTIVE') throw new AppError('Lottery is not active', 400);
+    if (new Date() > lottery.endDate) throw new AppError('Lottery has ended', 400);
+
+    // Check entry limit
+    if (lottery.entryLimit && lottery._count.entries >= lottery.entryLimit) {
+      throw new AppError('Lottery entry limit reached', 400);
+    }
+
+    // Check if user already entered
+    const existing = await prisma.lotteryEntry.findFirst({
+      where: { lotteryId: id, userId }
+    });
+    if (existing) throw new AppError('You have already entered this lottery', 400);
+
+    const entryCount = lottery._count.entries;
+    const entryNumber = generateTicketNumber(id, entryCount + 1);
+
+    const entry = await prisma.lotteryEntry.create({
+      data: {
+        lotteryId: id,
+        userId,
+        entryNumber,
+      },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true } }
       }
     });
 
-    if (!lottery) {
-      throw new AppError('Lottery not found', 404);
-    }
-
-    res.json({
-      success: true,
-      data: lottery
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Buy lottery ticket (Riders and Drivers only)
-exports.buyTicket = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { quantity = 1 } = req.body;
-    const userId = req.user.id;
-
-    // Get lottery
-    const lottery = await prisma.lottery.findUnique({
-      where: { id }
+    // Update lottery entry count
+    await prisma.lottery.update({
+      where: { id },
+      data: { entryCount: { increment: 1 } }
     });
 
-    if (!lottery) {
-      throw new AppError('Lottery not found', 404);
-    }
+    logger.info(`Driver ${userId} entered lottery ${id}`);
 
-    // Check lottery is active
-    if (lottery.status !== 'ACTIVE') {
-      throw new AppError('Lottery is not active', 400);
-    }
-
-    // Check if still accepting tickets
-    if (lottery.soldTickets + quantity > lottery.maxTickets) {
-      throw new AppError('Not enough tickets available', 400);
-    }
-
-    // Check if lottery hasn't ended
-    if (new Date() > lottery.endDate) {
-      throw new AppError('Lottery has ended', 400);
-    }
-
-    // Calculate total price
-    const totalPrice = lottery.ticketPrice * quantity;
-
-    // Check user wallet balance
-    const wallet = await prisma.wallet.findUnique({
-      where: { userId }
-    });
-
-    if (!wallet || wallet.balance < totalPrice) {
-      throw new AppError('Insufficient wallet balance', 400);
-    }
-
-    // Generate tickets
-    const tickets = [];
-    let currentCount = lottery.soldTickets;
-
-    for (let i = 0; i < quantity; i++) {
-      currentCount++;
-      tickets.push({
-        lotteryId: id,
-        userId,
-        ticketNumber: generateTicketNumber(id, currentCount),
-        quantity: 1,
-        totalPrice: lottery.ticketPrice,
-        isWinner: false
-      });
-    }
-
-    // Create tickets and update wallet in transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create tickets
-      const createdTickets = await tx.lotteryTicket.createMany({
-        data: tickets
-      });
-
-      // Update wallet balance
-      await tx.wallet.update({
-        where: { userId },
-        data: {
-          balance: { decrement: totalPrice }
-        }
-      });
-
-      // Create transaction record
-      await tx.transaction.create({
-        data: {
-          walletId: wallet.id,
-          userId,
-          type: 'LOTTERY_TICKET',
-          amount: -totalPrice,
-          balanceAfter: wallet.balance - totalPrice,
-          description: `Lottery ticket purchase: ${quantity}x ${lottery.title}`,
-          referenceId: id,
-          referenceType: 'LOTTERY'
-        }
-      });
-
-      // Update lottery sold count
-      await tx.lottery.update({
-        where: { id },
-        data: {
-          soldTickets: { increment: quantity }
-        }
-      });
-
-      return createdTickets;
-    });
-
-    logger.info(`User ${userId} bought ${quantity} lottery tickets for lottery ${id}`);
-
-    // Emit socket event
     const io = req.app.get('io');
-    if (io) {
-      io.emit('lottery:ticketSold', {
-        lotteryId: id,
-        soldTickets: lottery.soldTickets + quantity
-      });
-    }
+    if (io) io.emit('lottery:entry', { lotteryId: id, userId, entryCount: entryCount + 1 });
 
     res.status(201).json({
       success: true,
-      message: `Successfully purchased ${quantity} ticket(s)`,
-      data: {
-        tickets,
-        totalCost: totalPrice,
-        newBalance: wallet.balance - totalPrice
-      }
+      message: 'Entry submitted successfully!',
+      data: entry
     });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
-// Get my tickets
-exports.getMyTickets = async (req, res, next) => {
+// Get my entries
+exports.getMyEntries = async (req, res, next) => {
   try {
-    const { page, limit } = req.query;
-    const { skip, take, page: p, limit: l } = paginate(page, limit);
-
+    const { status } = req.query;
     const where = { userId: req.user.id };
+    if (status) where.lottery = { status };
 
-    const [tickets, total] = await Promise.all([
-      prisma.lotteryTicket.findMany({
-        where,
-        skip,
-        take,
-        orderBy: { purchasedAt: 'desc' },
-        include: {
-          lottery: {
-            select: {
-              id: true,
-              title: true,
-              status: true,
-              drawDate: true,
-              prizePool: true
-            }
-          }
-        }
-      }),
-      prisma.lotteryTicket.count({ where })
-    ]);
-
-    res.json({
-      success: true,
-      ...paginationResponse(tickets, total, p, l)
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Get my lottery history
-exports.getMyHistory = async (req, res, next) => {
-  try {
-    const tickets = await prisma.lotteryTicket.findMany({
-      where: { userId: req.user.id, isWinner: true },
-      orderBy: { purchasedAt: 'desc' },
+    const entries = await prisma.lotteryEntry.findMany({
+      where,
+      orderBy: { enteredAt: 'desc' },
       include: {
         lottery: {
-          select: {
-            id: true,
-            title: true,
-            prizePool: true,
-            prizeDescription: true,
-            drawDate: true
-          }
+          select: { id: true, title: true, prizePool: true, status: true, drawDate: true, winnerId: true }
         }
       }
     });
+    res.json({ success: true, data: entries });
+  } catch (error) { next(error); }
+};
 
-    const totalWinnings = tickets.reduce((sum, t) => sum + t.totalPrice, 0);
-
-    res.json({
-      success: true,
-      data: {
-        tickets,
-        totalWinnings,
-        totalWins: tickets.length
+// Get my history
+exports.getMyHistory = async (req, res, next) => {
+  try {
+    const entries = await prisma.lotteryEntry.findMany({
+      where: { userId: req.user.id },
+      orderBy: { enteredAt: 'desc' },
+      include: {
+        lottery: {
+          select: { id: true, title: true, prizePool: true, status: true, drawDate: true }
+        }
       }
     });
-  } catch (error) {
-    next(error);
-  }
+    const won = entries.filter(e => e.isWinner);
+    res.json({ success: true, data: { entries, won, totalEntered: entries.length, totalWon: won.length } });
+  } catch (error) { next(error); }
 };
 
 // Create lottery (Admin only)
 exports.createLottery = async (req, res, next) => {
   try {
-    const {
-      title,
-      description,
-      ticketPrice,
-      maxTickets,
-      prizePool,
-      prizeDescription,
-      prizeImageUrl,
-      startDate,
-      endDate,
-      drawDate,
-      termsAndConditions
-    } = req.body;
+    const { title, description, prizePool, prizeDescription, prizeImageUrl, entryLimit, startDate, endDate, drawDate, termsAndConditions } = req.body;
+
+    if (!title || !prizePool || !startDate || !endDate || !drawDate) {
+      throw new AppError('title, prizePool, startDate, endDate, drawDate required', 400);
+    }
 
     const lottery = await prisma.lottery.create({
       data: {
         title,
-        description,
-        ticketPrice,
-        maxTickets,
-        prizePool,
-        prizeDescription,
-        prizeImageUrl,
+        description: description || null,
+        prizePool: parseFloat(prizePool),
+        prizeDescription: prizeDescription || null,
+        prizeImageUrl: prizeImageUrl || null,
+        entryLimit: entryLimit ? parseInt(entryLimit) : null,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         drawDate: new Date(drawDate),
-        termsAndConditions,
+        termsAndConditions: termsAndConditions || null,
         status: 'UPCOMING'
       }
     });
 
     logger.info(`New lottery created: ${lottery.title}`);
-
-    // Emit socket event
     const io = req.app.get('io');
-    if (io) {
-      io.emit('lottery:new', lottery);
-    }
+    if (io) io.emit('lottery:new', lottery);
 
-    res.status(201).json({
-      success: true,
-      message: 'Lottery created successfully',
-      data: lottery
-    });
-  } catch (error) {
-    next(error);
-  }
+    res.status(201).json({ success: true, message: 'Lottery created', data: lottery });
+  } catch (error) { next(error); }
 };
 
 // Update lottery (Admin only)
 exports.updateLottery = async (req, res, next) => {
   try {
-    const lottery = await prisma.lottery.findUnique({
-      where: { id: req.params.id }
-    });
-
-    if (!lottery) {
-      throw new AppError('Lottery not found', 404);
-    }
-
-    if (lottery.status === 'COMPLETED' || lottery.status === 'DRAWING') {
+    const lottery = await prisma.lottery.findUnique({ where: { id: req.params.id } });
+    if (!lottery) throw new AppError('Lottery not found', 404);
+    if (['COMPLETED', 'DRAWING'].includes(lottery.status)) {
       throw new AppError('Cannot update completed or drawing lottery', 400);
     }
-
-    const updated = await prisma.lottery.update({
-      where: { id: req.params.id },
-      data: req.body
-    });
-
-    res.json({
-      success: true,
-      message: 'Lottery updated successfully',
-      data: updated
-    });
-  } catch (error) {
-    next(error);
-  }
+    const updated = await prisma.lottery.update({ where: { id: req.params.id }, data: req.body });
+    res.json({ success: true, message: 'Lottery updated', data: updated });
+  } catch (error) { next(error); }
 };
 
 // Delete lottery (Admin only)
@@ -401,88 +228,56 @@ exports.deleteLottery = async (req, res, next) => {
   try {
     const lottery = await prisma.lottery.findUnique({
       where: { id: req.params.id },
-      include: { tickets: true }
+      include: { _count: { select: { entries: true } } }
     });
-
-    if (!lottery) {
-      throw new AppError('Lottery not found', 404);
+    if (!lottery) throw new AppError('Lottery not found', 404);
+    if (lottery._count.entries > 0) {
+      throw new AppError('Cannot delete lottery with entries', 400);
     }
-
-    if (lottery.tickets.length > 0) {
-      throw new AppError('Cannot delete lottery with sold tickets', 400);
-    }
-
-    await prisma.lottery.delete({
-      where: { id: req.params.id }
-    });
-
-    res.json({
-      success: true,
-      message: 'Lottery deleted successfully'
-    });
-  } catch (error) {
-    next(error);
-  }
+    await prisma.lottery.delete({ where: { id: req.params.id } });
+    res.json({ success: true, message: 'Lottery deleted' });
+  } catch (error) { next(error); }
 };
 
-// Draw lottery (Admin only)
+// Draw lottery (Admin only) — picks a random DRIVER entry
 exports.drawLottery = async (req, res, next) => {
   try {
     const lottery = await prisma.lottery.findUnique({
       where: { id: req.params.id },
       include: {
-        tickets: true
+        entries: {
+          include: {
+            user: { select: { id: true, firstName: true, lastName: true, phone: true } }
+          }
+        }
       }
     });
 
-    if (!lottery) {
-      throw new AppError('Lottery not found', 404);
-    }
+    if (!lottery) throw new AppError('Lottery not found', 404);
+    if (!['ACTIVE', 'UPCOMING'].includes(lottery.status)) throw new AppError('Lottery cannot be drawn', 400);
+    if (lottery.entries.length === 0) throw new AppError('No entries yet', 400);
 
-    if (lottery.status !== 'ACTIVE' && lottery.status !== 'UPCOMING') {
-      throw new AppError('Lottery cannot be drawn', 400);
-    }
+    await prisma.lottery.update({ where: { id: req.params.id }, data: { status: 'DRAWING' } });
 
-    if (lottery.tickets.length === 0) {
-      throw new AppError('No tickets sold', 400);
-    }
+    const winningIndex = Math.floor(Math.random() * lottery.entries.length);
+    const winningEntry = lottery.entries[winningIndex];
 
-    // Update status to DRAWING
-    await prisma.lottery.update({
-      where: { id: req.params.id },
-      data: { status: 'DRAWING' }
-    });
-
-    // Random winner selection
-    const winningIndex = Math.floor(Math.random() * lottery.tickets.length);
-    const winningTicket = lottery.tickets[winningIndex];
-
-    // Update lottery and ticket in transaction
     await prisma.$transaction(async (tx) => {
-      // Mark winning ticket
-      await tx.lotteryTicket.update({
-        where: { id: winningTicket.id },
+      await tx.lotteryEntry.update({
+        where: { id: winningEntry.id },
         data: { isWinner: true }
       });
 
-      // Award prize to winner's wallet
-      const winnerWallet = await tx.wallet.findUnique({
-        where: { userId: winningTicket.userId }
-      });
-
+      const winnerWallet = await tx.wallet.findUnique({ where: { userId: winningEntry.userId } });
       if (winnerWallet) {
         await tx.wallet.update({
-          where: { userId: winningTicket.userId },
-          data: {
-            balance: { increment: lottery.prizePool }
-          }
+          where: { userId: winningEntry.userId },
+          data: { balance: { increment: lottery.prizePool } }
         });
-
-        // Create transaction record
         await tx.transaction.create({
           data: {
             walletId: winnerWallet.id,
-            userId: winningTicket.userId,
+            userId: winningEntry.userId,
             type: 'LOTTERY_WIN',
             amount: lottery.prizePool,
             balanceAfter: winnerWallet.balance + lottery.prizePool,
@@ -493,54 +288,33 @@ exports.drawLottery = async (req, res, next) => {
         });
       }
 
-      // Update lottery
       await tx.lottery.update({
         where: { id: lottery.id },
-        data: {
-          status: 'COMPLETED',
-          winnerId: winningTicket.userId,
-          winningTicket: winningTicket.ticketNumber
-        }
+        data: { status: 'COMPLETED', winnerId: winningEntry.userId }
       });
     });
 
-    logger.info(`Lottery ${lottery.id} drawn. Winner: ${winningTicket.userId}, Ticket: ${winningTicket.ticketNumber}`);
+    logger.info(`Lottery ${lottery.id} drawn. Winner: ${winningEntry.userId}`);
 
-    // Emit socket event
     const io = req.app.get('io');
     if (io) {
       io.emit('lottery:drawn', {
         lotteryId: lottery.id,
-        winnerId: winningTicket.userId,
-        winningTicket: winningTicket.ticketNumber,
+        winnerId: winningEntry.userId,
         prizePool: lottery.prizePool
       });
     }
-
-    // Get winner info for response
-    const winner = await prisma.user.findUnique({
-      where: { id: winningTicket.userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        phone: true
-      }
-    });
 
     res.json({
       success: true,
       message: 'Lottery drawn successfully',
       data: {
         lotteryId: lottery.id,
-        winningTicket: winningTicket.ticketNumber,
-        winner,
+        winner: winningEntry.user,
         prizePool: lottery.prizePool
       }
     });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
 // Get lottery stats (Admin only)
@@ -549,28 +323,20 @@ exports.getLotteryStats = async (req, res, next) => {
     const [
       totalLotteries,
       activeLotteries,
-      totalTicketsSold,
+      totalEntries,
       totalPrizesPaid,
       recentWinners
     ] = await Promise.all([
       prisma.lottery.count(),
       prisma.lottery.count({ where: { status: 'ACTIVE' } }),
-      prisma.lotteryTicket.count(),
-      prisma.transaction.aggregate({
-        where: { type: 'LOTTERY_WIN' },
-        _sum: { amount: true }
-      }),
+      prisma.lotteryEntry.count(),
+      prisma.transaction.aggregate({ where: { type: 'LOTTERY_WIN' }, _sum: { amount: true } }),
       prisma.lottery.findMany({
         where: { status: 'COMPLETED' },
         take: 5,
         orderBy: { drawDate: 'desc' },
         include: {
-          winner: {
-            select: {
-              firstName: true,
-              lastName: true
-            }
-          }
+          winner: { select: { firstName: true, lastName: true } }
         }
       })
     ]);
@@ -580,12 +346,10 @@ exports.getLotteryStats = async (req, res, next) => {
       data: {
         totalLotteries,
         activeLotteries,
-        totalTicketsSold,
+        totalEntries,
         totalPrizesPaid: totalPrizesPaid._sum.amount || 0,
         recentWinners
       }
     });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };

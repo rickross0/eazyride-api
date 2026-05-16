@@ -1,24 +1,24 @@
 // ============================================================
-// 🎰 Lottery System Routes
+// 🎰 Lottery System Routes — Promotional Giveaway for Drivers
 // ============================================================
 
 const express = require('express');
 const router = express.Router();
 const lotteryController = require('../controllers/lotteryController');
 const { authenticate } = require('../middleware/auth');
-const { requireRole, requirePermission, PERMISSIONS } = require('../middleware/roleCheck');
+const { requireRole, requirePermission } = require('../middleware/roleCheck');
 
 // Public routes
 router.get('/', lotteryController.getLotteries);
 router.get('/active', lotteryController.getActiveLottery);
 router.get('/:id', lotteryController.getLotteryById);
 
-// Protected routes (authenticated users)
+// Protected routes
 router.use(authenticate);
 
-// Riders and Drivers can buy tickets
-router.post('/:id/buy', requireRole('RIDER', 'DRIVER'), lotteryController.buyTicket);
-router.get('/my/tickets', lotteryController.getMyTickets);
+// Drivers enter for free
+router.post('/:id/enter', requireRole('DRIVER'), lotteryController.enterLottery);
+router.get('/my/entries', lotteryController.getMyEntries);
 router.get('/my/history', lotteryController.getMyHistory);
 
 // Admin routes

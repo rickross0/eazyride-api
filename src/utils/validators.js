@@ -60,8 +60,8 @@ const createBookingValidation = [
 // Lottery validation
 const createLotteryValidation = [
   body('title').trim().notEmpty().withMessage('Title required'),
-  body('ticketPrice').isFloat({ min: 0.01 }).withMessage('Valid ticket price required'),
-  body('maxTickets').isInt({ min: 1 }).withMessage('Max tickets required'),
+  
+  body('entryLimit').optional().isInt({ min: 1 }).withMessage('Valid entry limit'),
   body('prizePool').isFloat({ min: 1 }).withMessage('Prize pool required'),
   body('drawDate').isISO8601().withMessage('Valid draw date required'),
   validate,

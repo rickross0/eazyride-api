@@ -71,7 +71,7 @@ module.exports = {
     COMMISSION: 'COMMISSION',
     PAYOUT: 'PAYOUT',
     LOTTERY_WIN: 'LOTTERY_WIN',
-    LOTTERY_TICKET: 'LOTTERY_TICKET'
+// Removed: LOTTERY_TICKET (giveaway is free) 'LOTTERY_TICKET'
   },
 
   // Lottery Status
