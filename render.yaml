@@ -11,9 +11,7 @@ services:
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        fromDatabase:
-          name: eazyride-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
@@ -21,17 +19,4 @@ services:
       - key: CORS_ORIGIN
         value: https://eazyride-admin.onrender.com,https://eazyride-site.onrender.com
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: eazyride-redis
-          property: connectionString
-
-databases:
-  - name: eazyride-db
-    plan: starter
-    ipAllowList: []
-
-redis:
-  - name: eazyride-redis
-    plan: free
-    ipAllowList: []
+        value: ""
