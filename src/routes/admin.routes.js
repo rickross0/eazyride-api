@@ -166,3 +166,29 @@ router.get('/provider-earnings', requirePermission('VIEW_PROVIDERS'), async (req
 });
 
 module.exports = router;
+
+// Bulk update support contacts
+router.put('/support/contacts', requirePermission('UPDATE_SUPPORT'), async (req, res, next) => {
+  try {
+    const contacts = Array.isArray(req.body) ? req.body : req.body.contacts;
+    if (!Array.isArray(contacts)) throw new AppError('contacts array required', 400);
+    const results = [];
+    for (const contact of contacts) {
+      if (contact.id) {
+        const updated = await prisma.supportContact.update({
+          where: { id: contact.id },
+          data: contact,
+        });
+        results.push(updated);
+      } else {
+        const created = await prisma.supportContact.create({
+          data: contact,
+        });
+        results.push(created);
+      }
+    }
+    res.json({ success: true, data: results });
+  } catch (err) { next(err); }
+});
+
+module.exports = router;
