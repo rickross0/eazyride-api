@@ -7,37 +7,38 @@ const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
 // Public/read routes
 router.get('/', authMiddleware, foodCtrl.listRestaurants);
+
 // ── Store Owner: My Restaurant Stats ─────────────────────────
 router.get('/me/stats', authMiddleware, roleMiddleware('STORE_OWNER'), async (req, res) => {
   try {
-    const restaurant = await prisma.restaurant.findFirst({ where: { ownerId: req.userId } });
-    if (!restaurant) return res.status(404).json({ error: 'No restaurant found' });
+    const store = await prisma.store.findFirst({ where: { ownerId: req.userId } });
+    if (!store) return res.status(404).json({ error: 'No restaurant found' });
 
     const [completedOrders, pendingOrders, totalOrders] = await Promise.all([
-      prisma.foodOrder.count({ where: { restaurantId: restaurant.id, status: 'DELIVERED' } }),
-      prisma.foodOrder.count({ where: { restaurantId: restaurant.id, status: { in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'] } } }),
-      prisma.foodOrder.count({ where: { restaurantId: restaurant.id } }),
+      prisma.order.count({ where: { storeId: store.id, status: 'DELIVERED' } }),
+      prisma.order.count({ where: { storeId: store.id, status: { in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'] } } }),
+      prisma.order.count({ where: { storeId: store.id } }),
     ]);
 
-    const totalEarningsResult = await prisma.foodOrder.aggregate({
-      where: { restaurantId: restaurant.id, status: 'DELIVERED' },
+    const totalEarningsResult = await prisma.order.aggregate({
+      where: { storeId: store.id, status: 'DELIVERED' },
       _sum: { totalAmount: true },
     });
 
-    const pendingEarningsResult = await prisma.foodOrder.aggregate({
-      where: { restaurantId: restaurant.id, status: { in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DRIVER_ASSIGNED', 'DRIVER_ARRIVED', 'PICKUP_CONFIRMED', 'OUT_FOR_DELIVERY'] } },
+    const pendingEarningsResult = await prisma.order.aggregate({
+      where: { storeId: store.id, status: { in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DRIVER_ASSIGNED', 'DRIVER_ARRIVED', 'PICKUP_CONFIRMED', 'OUT_FOR_DELIVERY'] } },
       _sum: { totalAmount: true },
     });
 
     const totalEarnings = totalEarningsResult._sum.totalAmount || 0;
     const pendingAmount = pendingEarningsResult._sum.totalAmount || 0;
-    const commissionRate = restaurant.commissionRate ?? 10;
+    const commissionRate = store.commissionRate ?? 10;
     const totalCommission = Math.round(totalEarnings * commissionRate / 100 * 100) / 100;
     const netEarnings = Math.round((totalEarnings - totalCommission) * 100) / 100;
 
     res.json({
-      restaurantId: restaurant.id,
-      restaurantName: restaurant.name,
+      restaurantId: store.id,
+      restaurantName: store.name,
       totalOrders,
       completedOrders,
       pendingOrders,
@@ -56,21 +57,21 @@ router.get('/me/stats', authMiddleware, roleMiddleware('STORE_OWNER'), async (re
 
 router.get('/me/transactions', authMiddleware, roleMiddleware('STORE_OWNER'), async (req, res) => {
   try {
-    const restaurant = await prisma.restaurant.findFirst({ where: { ownerId: req.userId } });
-    if (!restaurant) return res.status(404).json({ error: 'No restaurant found' });
+    const store = await prisma.store.findFirst({ where: { ownerId: req.userId } });
+    if (!store) return res.status(404).json({ error: 'No restaurant found' });
 
-    const orders = await prisma.foodOrder.findMany({
-      where: { restaurantId: restaurant.id, status: { in: ['DELIVERED', 'OUT_FOR_DELIVERY', 'PICKUP_CONFIRMED'] } },
+    const orders = await prisma.order.findMany({
+      where: { storeId: store.id, status: { in: ['DELIVERED', 'OUT_FOR_DELIVERY', 'PICKUP_CONFIRMED'] } },
       orderBy: { createdAt: 'desc' },
       take: 50,
       select: {
         id: true, createdAt: true, status: true,
         totalAmount: true, subtotal: true, serviceFee: true, deliveryFee: true,
-        items: { select: { name: true, quantity: true, price: true } },
+        items: { select: { name: true, quantity: true, unitPrice: true } },
       },
     });
 
-    const commissionRate = restaurant.commissionRate ?? 10;
+    const commissionRate = store.commissionRate ?? 10;
     const transactions = orders.map((o) => ({
       id: o.id,
       createdAt: o.createdAt,
@@ -91,15 +92,15 @@ router.get('/me/transactions', authMiddleware, roleMiddleware('STORE_OWNER'), as
 
 router.get('/me/profile', authMiddleware, roleMiddleware('STORE_OWNER'), async (req, res) => {
   try {
-    const restaurant = await prisma.restaurant.findFirst({ where: { ownerId: req.userId } });
-    if (!restaurant) return res.status(404).json({ error: 'No restaurant found' });
-    res.json({ restaurant });
+    const store = await prisma.store.findFirst({ where: { ownerId: req.userId } });
+    if (!store) return res.status(404).json({ error: 'No restaurant found' });
+    res.json({ restaurant: store });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch restaurant profile' });
   }
 });
 
-// GET /restaurants/me - Get current store owner store (works for both restaurant and car rental)
+// GET /restaurants/me - Get current store owner store
 router.get('/me', authMiddleware, roleMiddleware('STORE_OWNER'), async (req, res) => {
   try {
     const store = await prisma.store.findUnique({ where: { ownerId: req.userId } });
@@ -113,8 +114,8 @@ router.get('/me', authMiddleware, roleMiddleware('STORE_OWNER'), async (req, res
 
 router.put('/me', authMiddleware, roleMiddleware('STORE_OWNER'), async (req, res) => {
   try {
-    const restaurant = await prisma.restaurant.findFirst({ where: { ownerId: req.userId } });
-    if (!restaurant) return res.status(404).json({ error: 'No restaurant found' });
+    const store = await prisma.store.findFirst({ where: { ownerId: req.userId } });
+    if (!store) return res.status(404).json({ error: 'No restaurant found' });
 
     const { name, description, phone, address, isActive, openingTime, closingTime, deliveryFee, minOrder } = req.body;
     const updateData = {};
@@ -128,20 +129,19 @@ router.put('/me', authMiddleware, roleMiddleware('STORE_OWNER'), async (req, res
     if (deliveryFee !== undefined) updateData.deliveryFee = parseFloat(deliveryFee);
     if (minOrder !== undefined) updateData.minOrder = parseFloat(minOrder);
 
-    const updated = await prisma.restaurant.update({ where: { id: restaurant.id }, data: updateData });
+    const updated = await prisma.store.update({ where: { id: store.id }, data: updateData });
     res.json({ restaurant: updated });
   } catch (err) {
     console.error('Update restaurant error:', err);
     res.status(500).json({ error: 'Failed to update restaurant' });
   }
 });
+
 router.get('/:id', authMiddleware, foodCtrl.getRestaurant);
 
 // Store owner / Admin CRUD routes
 router.post('/', authMiddleware, roleMiddleware('ADMIN', 'SUPER_ADMIN', 'STORE_OWNER'), upload.single('photo'), foodCtrl.createRestaurant);
 router.put('/:id', authMiddleware, roleMiddleware('ADMIN', 'SUPER_ADMIN', 'STORE_OWNER'), upload.single('photo'), foodCtrl.updateRestaurant);
 router.delete('/:id', authMiddleware, roleMiddleware('ADMIN', 'SUPER_ADMIN', 'STORE_OWNER'), foodCtrl.deleteRestaurant);
-
-
 
 module.exports = router;

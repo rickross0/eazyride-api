@@ -1,8 +1,12 @@
 const prisma = require('../config/prisma');
 const { notifyOrderUpdate } = require('../services/notification');
-// Lazy-loaded to avoid circular dependency
 
-function emitToUserSafe(...args) { const { emitToUser } = require('../sockets/rideTracking'); return emitToUser(...args); }
+function emitToUserSafe(...args) {
+  try {
+    const { emitToUser } = require('../sockets/rideTracking');
+    return emitToUser(...args);
+  } catch {}
+}
 
 const getImageUrl = (req) => {
   if (req.file) {
@@ -20,8 +24,8 @@ exports.listRestaurants = async (req, res) => {
     if (category) where.category = category;
 
     const [restaurants, total] = await Promise.all([
-      prisma.restaurant.findMany({ where, orderBy: { rating: 'desc' }, skip, take: parseInt(limit) }),
-      prisma.restaurant.count({ where }),
+      prisma.store.findMany({ where, orderBy: { rating: 'desc' }, skip, take: parseInt(limit) }),
+      prisma.store.count({ where }),
     ]);
     return res.json({ restaurants, page: parseInt(page), total, pages: Math.ceil(total / parseInt(limit)) });
   } catch (err) {
@@ -31,7 +35,7 @@ exports.listRestaurants = async (req, res) => {
 
 exports.getRestaurant = async (req, res) => {
   try {
-    const restaurant = await prisma.restaurant.findUnique({
+    const restaurant = await prisma.store.findUnique({
       where: { id: req.params.id },
       include: { menuItems: { where: { isAvailable: true }, orderBy: { category: 'asc' } } },
     });
@@ -46,10 +50,10 @@ exports.getMenuItems = async (req, res) => {
   try {
     const { restaurantId, category } = req.query;
     const where = { isAvailable: true };
-    if (restaurantId) where.restaurantId = restaurantId;
+    if (restaurantId) where.storeId = restaurantId;
     if (category) where.category = category;
 
-    const items = await prisma.menuItem.findMany({ where, orderBy: { isPopular: 'desc' } });
+    const items = await prisma.menuItem.findMany({ where, orderBy: { name: 'asc' } });
     return res.json({ items });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to fetch menu' });
@@ -70,20 +74,30 @@ exports.createFoodOrder = async (req, res) => {
       if (!mi) throw new Error(`Menu item ${i.menuItemId} not found`);
       const lineTotal = mi.price * i.quantity;
       subtotal += lineTotal;
-      return { menuItemId: mi.id, name: mi.name, price: mi.price, quantity: i.quantity, subtotal: lineTotal, notes: i.notes };
+      return { menuItemId: mi.id, name: mi.name, unitPrice: mi.price, quantity: i.quantity, totalPrice: lineTotal, notes: i.notes };
     });
 
     const deliveryFee = deliveryMode === 'DELIVERY' ? 1.20 : 0;
     const serviceFee = Math.round(subtotal * 0.05 * 100) / 100;
     const totalAmount = Math.round((subtotal + deliveryFee + serviceFee) * 100) / 100;
 
-    const order = await prisma.foodOrder.create({
+    const order = await prisma.order.create({
       data: {
-        userId: req.userId, restaurantId,
+        orderNumber: `ORD-${Date.now()}`,
+        riderId: req.userId,
+        storeId: restaurantId,
         items: { create: orderItems },
-        status: 'PENDING', subtotal, deliveryFee, serviceFee, totalAmount,
-        deliveryAddress, deliveryLatitude, deliveryLongitude, deliveryMode, notes,
-        paymentMethod: 'wallet', paymentStatus: 'pending',
+        status: 'PENDING',
+        subtotal,
+        deliveryFee,
+        serviceFee,
+        totalAmount,
+        deliveryAddress,
+        deliveryCoordinates: deliveryLatitude && deliveryLongitude ? { lat: deliveryLatitude, lng: deliveryLongitude } : {},
+        deliveryMode,
+        notes,
+        paymentMethod: 'wallet',
+        paymentStatus: 'PENDING',
       },
       include: { items: true },
     });
@@ -98,12 +112,18 @@ exports.createFoodOrder = async (req, res) => {
 exports.getFoodOrders = async (req, res) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
-    const where = { userId: req.user.id };
+    const where = { riderId: req.user.id };
     if (status) where.status = status;
 
     const [orders, total] = await Promise.all([
-      prisma.foodOrder.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (parseInt(page) - 1) * parseInt(limit), take: parseInt(limit), include: { items: true, restaurant: { select: { id: true, name: true, image: true } } } }),
-      prisma.foodOrder.count({ where }),
+      prisma.order.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (parseInt(page) - 1) * parseInt(limit),
+        take: parseInt(limit),
+        include: { items: true, store: { select: { id: true, name: true, imageUrl: true } } },
+      }),
+      prisma.order.count({ where }),
     ]);
     return res.json({ orders, page: parseInt(page), total, pages: Math.ceil(total / parseInt(limit)) });
   } catch (err) {
@@ -124,7 +144,7 @@ exports.updateFoodOrderStatus = async (req, res) => {
       PICKUP_CONFIRMED: ['OUT_FOR_DELIVERY'],
       OUT_FOR_DELIVERY: ['DELIVERED'],
     };
-    const order = await prisma.foodOrder.findUnique({ where: { id: req.params.id } });
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
     if (!order) return res.status(404).json({ error: 'Order not found' });
     if (!validTransitions[order.status]?.includes(status)) return res.status(400).json({ error: `Cannot transition from ${order.status} to ${status}` });
 
@@ -132,25 +152,16 @@ exports.updateFoodOrderStatus = async (req, res) => {
     const updateData = { status };
     if (timestamps[status]) updateData[timestamps[status]] = new Date();
 
-    const updated = await prisma.foodOrder.update({ where: { id: req.params.id }, data: updateData });
+    const updated = await prisma.order.update({ where: { id: req.params.id }, data: updateData });
 
     try {
-      emitToUserSafe(order.userId, 'order:statusUpdate', { orderId: order.id, status, updatedAt: new Date().toISOString() });
-    } catch (socketErr) {
-      console.error('[Socket] Order status emit error:', socketErr.message);
-    }
-    await notifyOrderUpdate(order.userId, order.id, status);
-
-    // When order is confirmed, trigger delivery driver dispatch
-    if (status === 'CONFIRMED') {
-      try {
-        const deliveryDispatch = require('../services/deliveryDispatchService');
-        deliveryDispatch.assignDriver(order.id).catch((err) => console.error('Delivery dispatch error:', err));
-      } catch {}
-    }
+      emitToUserSafe(order.riderId, 'order:statusUpdate', { orderId: order.id, status, updatedAt: new Date().toISOString() });
+    } catch {}
+    await notifyOrderUpdate(order.riderId, order.id, status);
 
     return res.json({ order: updated });
   } catch (err) {
+    console.error('Update food order status error:', err);
     return res.status(500).json({ error: 'Failed to update order status' });
   }
 };
@@ -159,21 +170,21 @@ exports.verifyPickupPin = async (req, res) => {
   try {
     const { pin } = req.body;
     if (!pin) return res.status(400).json({ error: 'PIN required' });
-    const order = await prisma.foodOrder.findUnique({ where: { id: req.params.id } });
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
     if (!order) return res.status(404).json({ error: 'Order not found' });
     if (!order.pickupPin) return res.status(400).json({ error: 'No pickup PIN set for this order' });
     if (order.pickupPin !== String(pin)) return res.status(400).json({ error: 'Invalid PIN' });
     if (!['DRIVER_ARRIVED', 'DRIVER_ASSIGNED'].includes(order.status)) return res.status(400).json({ error: 'Cannot verify pickup at this stage' });
 
-    const updated = await prisma.foodOrder.update({
+    const updated = await prisma.order.update({
       where: { id: req.params.id },
       data: { status: 'PICKUP_CONFIRMED', pickupVerifiedAt: new Date(), pickedUpAt: new Date() },
     });
 
     try {
-      emitToUserSafe(order.userId, 'order:statusUpdate', { orderId: order.id, status: 'PICKUP_CONFIRMED', updatedAt: new Date().toISOString() });
+      emitToUserSafe(order.riderId, 'order:statusUpdate', { orderId: order.id, status: 'PICKUP_CONFIRMED', updatedAt: new Date().toISOString() });
     } catch {}
-    await notifyOrderUpdate(order.userId, order.id, 'PICKUP_CONFIRMED');
+    await notifyOrderUpdate(order.riderId, order.id, 'PICKUP_CONFIRMED');
 
     return res.json({ order: updated, verified: true });
   } catch (err) {
@@ -187,13 +198,18 @@ exports.createRestaurant = async (req, res) => {
     if (!name || !cuisine || !address) return res.status(400).json({ error: 'name, cuisine, and address are required' });
 
     const imageUrl = getImageUrl(req);
-    const restaurant = await prisma.restaurant.create({
+    const restaurant = await prisma.store.create({
       data: {
-        ownerId: req.userId, name, description: description || null, cuisine, address,
-        phone: phone || null, image: imageUrl || req.body.image || null,
-        latitude: latitude ? parseFloat(latitude) : 0, longitude: longitude ? parseFloat(longitude) : 0,
-        deliveryFee: deliveryFee ? parseFloat(deliveryFee) : 0, minOrder: minOrder ? parseFloat(minOrder) : 0,
-        openingTime: openingTime || '08:00', closingTime: closingTime || '22:00',
+        name, description, cuisine, address, phone,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
+        coordinates: latitude && longitude ? { lat: parseFloat(latitude), lng: parseFloat(longitude) } : null,
+        category: cuisine,
+        deliveryFee: deliveryFee ? parseFloat(deliveryFee) : 0,
+        minOrder: minOrder ? parseFloat(minOrder) : 0,
+        openingTime: openingTime || '08:00',
+        closingTime: closingTime || '22:00',
+        imageUrl: imageUrl || req.body.image || null,
       },
     });
     return res.status(201).json({ restaurant });
@@ -205,7 +221,7 @@ exports.createRestaurant = async (req, res) => {
 
 exports.updateRestaurant = async (req, res) => {
   try {
-    const existing = await prisma.restaurant.findUnique({ where: { id: req.params.id } });
+    const existing = await prisma.store.findUnique({ where: { id: req.params.id } });
     if (!existing) return res.status(404).json({ error: 'Restaurant not found' });
 
     const { name, description, cuisine, address, phone, isActive, latitude, longitude, deliveryFee, minOrder, openingTime, closingTime } = req.body;
@@ -217,17 +233,23 @@ exports.updateRestaurant = async (req, res) => {
     if (cuisine !== undefined) updateData.cuisine = cuisine;
     if (address !== undefined) updateData.address = address;
     if (phone !== undefined) updateData.phone = phone;
-    if (imageUrl) updateData.image = imageUrl;
-    else if (req.body.image !== undefined) updateData.image = req.body.image || null;
+    if (imageUrl) updateData.imageUrl = imageUrl;
+    else if (req.body.image !== undefined) updateData.imageUrl = req.body.image || null;
     if (isActive !== undefined) updateData.isActive = isActive === 'true' || isActive === true;
-    if (latitude !== undefined) updateData.latitude = parseFloat(latitude);
-    if (longitude !== undefined) updateData.longitude = parseFloat(longitude);
+    if (latitude !== undefined) {
+      updateData.latitude = parseFloat(latitude);
+      updateData.coordinates = { lat: parseFloat(latitude), lng: updateData.longitude || existing.longitude || 0 };
+    }
+    if (longitude !== undefined) {
+      updateData.longitude = parseFloat(longitude);
+      updateData.coordinates = { lat: updateData.latitude || existing.latitude || 0, lng: parseFloat(longitude) };
+    }
     if (deliveryFee !== undefined) updateData.deliveryFee = parseFloat(deliveryFee);
     if (minOrder !== undefined) updateData.minOrder = parseFloat(minOrder);
     if (openingTime !== undefined) updateData.openingTime = openingTime;
     if (closingTime !== undefined) updateData.closingTime = closingTime;
 
-    const restaurant = await prisma.restaurant.update({
+    const restaurant = await prisma.store.update({
       where: { id: req.params.id },
       data: updateData,
     });
@@ -240,9 +262,9 @@ exports.updateRestaurant = async (req, res) => {
 
 exports.deleteRestaurant = async (req, res) => {
   try {
-    const existing = await prisma.restaurant.findUnique({ where: { id: req.params.id } });
+    const existing = await prisma.store.findUnique({ where: { id: req.params.id } });
     if (!existing) return res.status(404).json({ error: 'Restaurant not found' });
-    const restaurant = await prisma.restaurant.update({ where: { id: req.params.id }, data: { isActive: false } });
+    const restaurant = await prisma.store.update({ where: { id: req.params.id }, data: { isActive: false } });
     return res.json({ restaurant });
   } catch (err) {
     console.error('Delete restaurant error:', err);
@@ -252,21 +274,24 @@ exports.deleteRestaurant = async (req, res) => {
 
 exports.createMenuItem = async (req, res) => {
   try {
-    const { restaurantId, name, description, price, category, preparationTime, isAvailable, isPopular, calories } = req.body;
+    const { restaurantId, name, description, price, category, preparationTime, isAvailable, isPopular, notes } = req.body;
     if (!restaurantId || !name || price === undefined || !category) return res.status(400).json({ error: 'restaurantId, name, price, and category are required' });
-    const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+    const restaurant = await prisma.store.findUnique({ where: { id: restaurantId } });
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
 
     const imageUrl = getImageUrl(req);
     const menuItem = await prisma.menuItem.create({
       data: {
-        restaurantId, name, description: description || null,
-        price: parseFloat(price), category,
-        image: imageUrl || req.body.image || null,
+        storeId: restaurantId,
+        name,
+        description: description || null,
+        price: parseFloat(price),
+        category,
+        imageUrl: imageUrl || req.body.image || null,
         preparationTime: preparationTime ? parseInt(preparationTime) : null,
-        calories: calories ? parseInt(calories) : null,
         isAvailable: isAvailable !== undefined ? (isAvailable === 'true' || isAvailable === true) : true,
         isPopular: isPopular === 'true' || isPopular === true,
+        notes: notes || null,
       },
     });
     return res.status(201).json({ menuItem });
@@ -281,7 +306,7 @@ exports.updateMenuItem = async (req, res) => {
     const existing = await prisma.menuItem.findUnique({ where: { id: req.params.id } });
     if (!existing) return res.status(404).json({ error: 'Menu item not found' });
 
-    const { name, description, price, category, preparationTime, isAvailable, isPopular, calories, restaurantId } = req.body;
+    const { name, description, price, category, preparationTime, isAvailable, isPopular, notes, restaurantId } = req.body;
     const imageUrl = getImageUrl(req);
 
     const updateData = {};
@@ -289,13 +314,13 @@ exports.updateMenuItem = async (req, res) => {
     if (description !== undefined) updateData.description = description;
     if (price !== undefined) updateData.price = parseFloat(price);
     if (category !== undefined) updateData.category = category;
-    if (imageUrl) updateData.image = imageUrl;
-    else if (req.body.image !== undefined) updateData.image = req.body.image || null;
+    if (imageUrl) updateData.imageUrl = imageUrl;
+    else if (req.body.image !== undefined) updateData.imageUrl = req.body.image || null;
     if (preparationTime !== undefined) updateData.preparationTime = parseInt(preparationTime) || null;
     if (isAvailable !== undefined) updateData.isAvailable = isAvailable === 'true' || isAvailable === true;
     if (isPopular !== undefined) updateData.isPopular = isPopular === 'true' || isPopular === true;
-    if (calories !== undefined) updateData.calories = parseInt(calories) || null;
-    if (restaurantId !== undefined) updateData.restaurantId = restaurantId;
+    if (notes !== undefined) updateData.notes = notes || null;
+    if (restaurantId !== undefined) updateData.storeId = restaurantId;
 
     const menuItem = await prisma.menuItem.update({
       where: { id: req.params.id },

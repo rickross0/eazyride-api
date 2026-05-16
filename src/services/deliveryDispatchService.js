@@ -1,15 +1,18 @@
 const prisma = require('../config/prisma');
 const redis = require('../config/redis');
-// Lazy-loaded to avoid circular dependency
 const { notifyOrderUpdate, sendPush } = require('./notification');
 
 function emitToDriverSafe(...args) {
-  const { emitToDriver } = require('../sockets/rideTracking');
-  return emitToDriverSafe(...args);
+  try {
+    const { emitToDriver } = require('../sockets/rideTracking');
+    return emitToDriver(...args);
+  } catch {}
 }
 function emitToUserSafe(...args) {
-  const { emitToUser } = require('../sockets/rideTracking');
-  return emitToUserSafe(...args);
+  try {
+    const { emitToUser } = require('../sockets/rideTracking');
+    return emitToUser(...args);
+  } catch {}
 }
 
 const DELIVERY_RADIUS_KM = 5;
@@ -23,27 +26,25 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 }
 
 function generatePickupPin() {
-  return String(Math.floor(1000 + Math.random() * 9000)); // 4-digit PIN
+  return String(Math.floor(1000 + Math.random() * 9000));
 }
 
-// Assign the nearest available delivery driver to a food order
 async function assignDriver(orderId) {
-  const order = await prisma.foodOrder.findUnique({
+  const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { restaurant: { select: { id: true, name: true, latitude: true, longitude: true } } },
+    include: { store: { select: { id: true, name: true, latitude: true, longitude: true } } },
   });
 
-  if (!order || !order.restaurant) throw new Error('Order or restaurant not found');
+  if (!order || !order.store) throw new Error('Order or store not found');
   if (order.status !== 'CONFIRMED' && order.status !== 'PREPARING' && order.status !== 'READY') {
     throw new Error('Order must be confirmed/preparing/ready to assign driver');
   }
 
-  const restLat = order.restaurant.latitude;
-  const restLng = order.restaurant.longitude;
+  const restLat = order.store.latitude;
+  const restLng = order.store.longitude;
 
-  // Find online delivery drivers near the restaurant
   const deliveryDrivers = await prisma.driverProfile.findMany({
-    where: { isOnline: true, isOnRide: false, isApproved: true, canDeliver: true },
+    where: { isOnline: true, isOnRide: false, status: 'APPROVED', canDeliver: true },
     include: { user: { select: { id: true, latitude: true, longitude: true, firstName: true, phone: true, fcmToken: true } } },
   });
 
@@ -54,7 +55,6 @@ async function assignDriver(orderId) {
     let driverLat = dp.user.latitude;
     let driverLng = dp.user.longitude;
 
-    // Check Redis for more recent position
     try {
       const cached = await redis.get(`driver:${dp.userId}:pos`);
       if (cached) {
@@ -74,103 +74,89 @@ async function assignDriver(orderId) {
   }
 
   if (!bestDriver) {
-    // No delivery drivers available
     console.log(`[DeliveryDispatch] No delivery drivers available for order ${orderId}`);
     return { assigned: false, reason: 'no_drivers' };
   }
 
   const pickupPin = generatePickupPin();
 
-  // Assign driver and set pickup PIN
-  const updated = await prisma.foodOrder.update({
+  const updated = await prisma.order.update({
     where: { id: orderId },
     data: {
-      driverId: bestDriver.profile.id,
+      driverId: bestDriver.user.id,
       pickupPin,
       status: 'DRIVER_ASSIGNED',
     },
   });
 
-  // Notify driver via socket
   emitToDriverSafe(bestDriver.user.id, 'delivery:assigned', {
     orderId,
-    restaurantName: order.restaurant.name,
+    restaurantName: order.store.name,
     restaurantLat: restLat,
     restaurantLng: restLng,
     pickupPin,
     orderNumber: orderId.slice(0, 8),
   });
 
-  // Push notification
-  await sendPush(bestDriver.user.id, 'New Delivery Assignment', `Pickup from ${order.restaurant.name}`, { type: 'DELIVERY_ASSIGNMENT', orderId });
+  await sendPush(bestDriver.user.id, 'New Delivery Assignment', `Pickup from ${order.store.name}`, { type: 'DELIVERY_ASSIGNMENT', orderId });
+  await notifyOrderUpdate(order.riderId, orderId, 'DRIVER_ASSIGNED');
 
-  // Notify customer
-  await notifyOrderUpdate(order.userId, orderId, 'DRIVER_ASSIGNED');
-
-  return { assigned: true, driverId: bestDriver.profile.id, pickupPin, distanceKm: bestDist };
+  return { assigned: true, driverId: bestDriver.user.id, pickupPin, distanceKm: bestDist };
 }
 
-// GPS verification: check if driver is near the restaurant
 async function verifyDriverArrival(orderId, driverUserId, nfcVerified = false) {
-  const order = await prisma.foodOrder.findUnique({
+  const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { restaurant: { select: { latitude: true, longitude: true, name: true } } },
+    include: { store: { select: { latitude: true, longitude: true, name: true, ownerId: true } } },
   });
 
   if (!order) throw new Error('Order not found');
   if (order.status !== 'DRIVER_ASSIGNED') throw new Error('Order must be DRIVER_ASSIGNED to verify arrival');
 
-  // Get driver's current position from Redis
   let driverPos = null;
   try {
     const cached = await redis.get(`driver:${driverUserId}:pos`);
     if (cached) driverPos = JSON.parse(cached);
   } catch {}
 
-  // NFC override: skip GPS check if NFC verified (physical proximity of ~4cm)
   if (nfcVerified) {
-    const updated = await prisma.foodOrder.update({
+    const updated = await prisma.order.update({
       where: { id: orderId },
       data: { status: 'DRIVER_ARRIVED' },
     });
 
-    const storeOwner = await prisma.user.findUnique({ where: { id: order.restaurant.ownerId || order.userId } });
+    const storeOwner = await prisma.user.findUnique({ where: { id: order.store.ownerId || order.riderId } });
     if (storeOwner) {
-      await sendPush(storeOwner.id, 'Driver Arrived (NFC)', `Driver verified via NFC at ${order.restaurant.name} for order #${orderId.slice(0, 8)}`, { type: 'DRIVER_ARRIVED', orderId });
+      await sendPush(storeOwner.id, 'Driver Arrived (NFC)', `Driver verified via NFC at ${order.store.name} for order #${orderId.slice(0, 8)}`, { type: 'DRIVER_ARRIVED', orderId });
     }
 
-    await notifyOrderUpdate(order.userId, orderId, 'DRIVER_ARRIVED');
+    await notifyOrderUpdate(order.riderId, orderId, 'DRIVER_ARRIVED');
 
     return { arrived: true, distanceKm: 0, method: 'NFC' };
   }
 
   if (!driverPos) throw new Error('Driver position not available');
 
-  const dist = haversineKm(driverPos.lat, driverPos.lng, order.restaurant.latitude, order.restaurant.longitude);
-  const arrivalRadiusKm = 0.1; // 100 meters
+  const dist = haversineKm(driverPos.lat, driverPos.lng, order.store.latitude, order.store.longitude);
+  const arrivalRadiusKm = 0.1;
 
   if (dist > arrivalRadiusKm) {
     return { arrived: false, distanceKm: Math.round(dist * 1000), message: `Driver is ${Math.round(dist * 1000)}m away, must be within 100m` };
   }
 
-  const updated = await prisma.foodOrder.update({
+  const updated = await prisma.order.update({
     where: { id: orderId },
     data: { status: 'DRIVER_ARRIVED' },
   });
 
-  // Notify store owner
-  const storeOwner = await prisma.user.findUnique({ where: { id: order.restaurant.ownerId || order.userId } });
+  const storeOwner = await prisma.user.findUnique({ where: { id: order.store.ownerId || order.riderId } });
   if (storeOwner) {
-    await sendPush(storeOwner.id, 'Driver Arrived', `Driver is at ${order.restaurant.name} for order #${orderId.slice(0, 8)}`, { type: 'DRIVER_ARRIVED', orderId });
+    await sendPush(storeOwner.id, 'Driver Arrived', `Driver is at ${order.store.name} for order #${orderId.slice(0, 8)}`, { type: 'DRIVER_ARRIVED', orderId });
   }
 
-  // Notify customer
-  await notifyOrderUpdate(order.userId, orderId, 'DRIVER_ARRIVED');
+  await notifyOrderUpdate(order.riderId, orderId, 'DRIVER_ARRIVED');
 
   return { arrived: true, distanceKm: Math.round(dist * 1000) };
 }
-
-// NFC override: if nfcVerified=true, driver can confirm arrival even if GPS distance is too far
-// (NFC requires physical proximity of ~4cm, which is stronger proof than 100m GPS)
 
 module.exports = { assignDriver, verifyDriverArrival, generatePickupPin };

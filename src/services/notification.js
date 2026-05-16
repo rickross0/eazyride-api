@@ -140,18 +140,18 @@ async function notifyDeliveryAssignment(driverUserId, orderId, restaurantName, p
 async function notifyDriverArrival(orderId, restaurantName) {
   console.log('[Notify] Driver arrived at restaurant for order=' + orderId);
   try {
-    const order = await prisma.foodOrder.findUnique({ where: { id: orderId } });
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order) return;
     await prisma.notification.create({
       data: {
-        userId: order.userId,
+        userId: order.riderId,
         type: 'DRIVER_ARRIVED',
         title: 'Driver Arrived',
         message: 'Your delivery driver has arrived at ' + restaurantName,
         data: { orderId },
       },
     });
-    const user = await prisma.user.findUnique({ where: { id: order.userId } });
+    const user = await prisma.user.findUnique({ where: { id: order.riderId } });
     if (user && user.fcmToken) {
       await sendFcmMessage(user.fcmToken, {
         title: 'Driver Arrived',
@@ -169,7 +169,7 @@ module.exports = { notifyRideUpdate, notifyOrderUpdate, sendPush, notifyDelivery
 async function notifyCustomerOutForDelivery(userId, orderId) {
   console.log('[Notify] Customer out for delivery: userId=' + userId + ' orderId=' + orderId);
   try {
-    const order = await prisma.foodOrder.findUnique({ where: { id: orderId } });
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order) return;
 
     await prisma.notification.create({
