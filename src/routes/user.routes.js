@@ -9,6 +9,7 @@ router.get('/me', userController.getProfile);
 router.put('/me', userController.updateProfile);
 router.get('/addresses', userController.getSavedAddresses);
 router.post('/addresses', userController.addSavedAddress);
+router.delete('/addresses/:id', userController.deleteSavedAddress);
 
 // Admin
 router.get('/', requireRole('ADMIN'), userController.getAllUsers);

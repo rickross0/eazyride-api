@@ -113,3 +113,13 @@ exports.updateUserRole = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.deleteSavedAddress = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.savedAddress.deleteMany({ where: { id, userId: req.user.id } });
+    res.json({ success: true, message: 'Address deleted' });
+  } catch (err) {
+    next(err);
+  }
+};
