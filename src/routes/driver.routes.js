@@ -11,6 +11,8 @@ router.put('/profile', requireRole('DRIVER'), driverController.updateDriverProfi
 router.put('/location', requireRole('DRIVER'), driverController.updateLocation);
 router.put('/toggle-online', requireRole('DRIVER'), driverController.toggleOnline);
 router.get('/earnings', requireRole('DRIVER'), driverController.getDriverEarnings);
+router.get('/rides', requireRole('DRIVER'), driverController.getDriverRides);
+router.get('/orders', requireRole('DRIVER'), driverController.getDriverOrders);
 
 // Admin
 router.get('/', requireRole('ADMIN'), driverController.getAllDrivers);

@@ -122,3 +122,52 @@ exports.getAllDrivers = async (req, res, next) => {
     res.json({ success: true, ...paginationResponse(drivers, total, p, l) });
   } catch (error) { next(error); }
 };
+
+exports.getDriverRides = async (req, res, next) => {
+  try {
+    const { status, page = 1, limit = 50 } = req.query;
+    const { skip, take, page: p, limit: l } = paginate(page, limit);
+    const where = { driverId: req.user.id };
+    if (status) where.status = status;
+    const [rides, total] = await Promise.all([
+      prisma.ride.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: l,
+        include: {
+          rider: { select: { id: true, firstName: true, lastName: true, phone: true } },
+        },
+      }),
+      prisma.ride.count({ where }),
+    ]);
+    res.json({ success: true, ...paginationResponse(rides, total, p, l) });
+  } catch (error) { next(error); }
+};
+
+exports.getDriverOrders = async (req, res, next) => {
+  try {
+    const { status, page = 1, limit = 50 } = req.query;
+    const { skip, take, page: p, limit: l } = paginate(page, limit);
+    const dp = await prisma.driverProfile.findUnique({ where: { userId: req.user.id } });
+    if (!dp) throw new AppError('Driver profile not found', 404);
+
+    const where = { driverId: dp.id };
+    if (status) where.status = status;
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: l,
+        include: {
+          items: true,
+          store: { select: { id: true, name: true, imageUrl: true } },
+          rider: { select: { id: true, firstName: true, phone: true } },
+        },
+      }),
+      prisma.order.count({ where }),
+    ]);
+    res.json({ success: true, ...paginationResponse(orders, total, p, l) });
+  } catch (error) { next(error); }
+};
