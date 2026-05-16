@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: eazyride-api
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: eazyride-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://eazyride-admin.onrender.com,https://eazyride-site.onrender.com
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: eazyride-redis
+          property: connectionString
+
+databases:
+  - name: eazyride-db
+    plan: starter
+    ipAllowList: []
+
+redis:
+  - name: eazyride-redis
+    plan: free
+    ipAllowList: []
