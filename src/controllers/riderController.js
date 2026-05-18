@@ -4,7 +4,7 @@
 
 const { prisma } = require('../config/database');
 const { AppError } = require('../middleware/errorHandler');
-const { paginate, paginationResponse } = require('../utils/helpers');
+const { paginate, paginationResponse, flattenRide } = require('../utils/helpers');
 
 exports.getRiderProfile = async (req, res, next) => {
   try {
@@ -37,7 +37,7 @@ exports.getRideHistory = async (req, res, next) => {
       prisma.ride.findMany({ where: { riderId: req.user.id }, skip, take: l, orderBy: { createdAt: 'desc' }, include: { driver: { select: { id: true, firstName: true, lastName: true, avatar: true, driverProfile: true } } } }),
       prisma.ride.count({ where: { riderId: req.user.id } }),
     ]);
-    res.json({ success: true, ...paginationResponse(rides, total, p, l) });
+    res.json({ success: true, ...paginationResponse(rides.map(flattenRide), total, p, l) });
   } catch (error) { next(error); }
 };
 

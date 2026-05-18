@@ -4,7 +4,7 @@
 
 const { prisma } = require('../config/database');
 const { AppError } = require('../middleware/errorHandler');
-const { paginate, paginationResponse } = require('../utils/helpers');
+const { paginate, paginationResponse, flattenRide } = require('../utils/helpers');
 
 exports.getOnlineDrivers = async (req, res, next) => {
   try {
@@ -141,7 +141,7 @@ exports.getDriverRides = async (req, res, next) => {
       }),
       prisma.ride.count({ where }),
     ]);
-    res.json({ success: true, ...paginationResponse(rides, total, p, l) });
+    res.json({ success: true, ...paginationResponse(rides.map(flattenRide), total, p, l) });
   } catch (error) { next(error); }
 };
 

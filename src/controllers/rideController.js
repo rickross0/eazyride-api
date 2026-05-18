@@ -192,3 +192,4 @@ exports.getAllRides = async (req, res, next) => {
     res.json({ success: true, ...paginationResponse(rides.map(flattenRide), total, p, l) });
   } catch (error) { next(error); }
 };
+
