@@ -3,9 +3,9 @@ set -e
 
 echo "[render-start] Starting EazyRide + Haye! Backend..."
 
-# Run Prisma migrations (safe, idempotent)
-echo "[render-start] Running Prisma migrate deploy..."
-npx prisma migrate deploy || echo "[render-start] ⚠️  Migrations had issues, continuing..."
+# Sync Prisma schema to DB (handles schema changes without migration files)
+echo "[render-start] Running Prisma db push..."
+npx prisma db push --accept-data-loss 2>/dev/null || echo "[render-start] ⚠️  Prisma db push had issues, continuing..."
 
 # Run ensureSchema (creates missing tables/columns, idempotent)
 echo "[render-start] Running ensureSchema..."
