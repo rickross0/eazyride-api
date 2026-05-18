@@ -8,6 +8,7 @@ router.use(authenticate);
 router.get('/', walletController.getWallet);
 router.get('/transactions', walletController.getTransactions);
 router.post('/payout', walletController.requestPayout);
+router.post('/deposit', walletController.deposit);
 
 // Admin
 router.get('/payouts', requireRole('ADMIN'), walletController.getPayouts);

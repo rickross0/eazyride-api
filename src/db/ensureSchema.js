@@ -570,6 +570,11 @@ async function ensureSchema() {
       { table: 'Car', column: 'mileage', type: 'INTEGER', nullable: true },
       { table: 'Car', column: 'verifiedAt', type: 'TIMESTAMP(3)', nullable: true },
       { table: 'ProviderProfile', column: 'approvedAt', type: 'TIMESTAMP(3)', nullable: true },
+      { table: 'Store', column: 'cuisine', type: 'TEXT', nullable: true },
+      { table: 'Store', column: 'latitude', type: 'DOUBLE PRECISION', nullable: true },
+      { table: 'Store', column: 'longitude', type: 'DOUBLE PRECISION', nullable: true },
+      { table: 'Store', column: 'isPopular', type: 'BOOLEAN', nullable: false, default: false },
+      { table: 'PaymentTransaction', column: 'name', type: 'TEXT', nullable: true },
     ];
 
     for (const col of columns) {
@@ -592,6 +597,33 @@ async function ensureSchema() {
           console.error(`[ensureSchema] Failed column ${col.table}.${col.column}: ${e?.message || e}`);
         }
       }
+    }
+
+    // ============================================================
+    // Migration: LotteryTicket → LotteryEntry (if old table exists)
+    // ============================================================
+    try {
+      const ticketTableExists = await prisma.$queryRawUnsafe(
+        `SELECT table_name FROM information_schema.tables WHERE table_name = 'LotteryTicket'`
+      );
+      if (ticketTableExists.length > 0) {
+        console.log('[ensureSchema] Migrating LotteryTicket → LotteryEntry...');
+        await prisma.$executeRawUnsafe(`ALTER TABLE "LotteryTicket" RENAME TO "LotteryEntry"`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "LotteryEntry" RENAME COLUMN "ticketNumber" TO "entryNumber"`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "LotteryEntry" ADD COLUMN IF NOT EXISTS "enteredAt" TIMESTAMP(3) NOT NULL DEFAULT NOW()`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "LotteryEntry" ADD COLUMN IF NOT EXISTS "isWinner" BOOLEAN NOT NULL DEFAULT false`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "LotteryEntry" DROP COLUMN IF EXISTS "totalPrice"`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "LotteryEntry" DROP COLUMN IF EXISTS "purchasedAt"`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "Lottery" ADD COLUMN IF NOT EXISTS "entryLimit" INTEGER`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "Lottery" ADD COLUMN IF NOT EXISTS "entryCount" INTEGER NOT NULL DEFAULT 0`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "Lottery" DROP COLUMN IF EXISTS "ticketPrice"`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "Lottery" DROP COLUMN IF EXISTS "maxTickets"`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "Lottery" DROP COLUMN IF EXISTS "soldTickets"`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE "Lottery" DROP COLUMN IF EXISTS "winningTicket"`);
+        console.log('[ensureSchema] LotteryTicket → LotteryEntry migration complete');
+      }
+    } catch (e) {
+      console.error('[ensureSchema] Lottery migration error:', e?.message || e);
     }
 
     // Check missing enum values (Prisma enums stored as TEXT columns)

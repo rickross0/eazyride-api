@@ -94,3 +94,37 @@ exports.rejectPayout = async (req, res, next) => {
     res.json({ success: true, message: 'Payout rejected', data: updated });
   } catch (error) { next(error); }
 };
+
+exports.deposit = async (req, res, next) => {
+  try {
+    const { phone, amount } = req.body;
+    if (!phone || !amount || amount <= 0) {
+      return res.status(400).json({ success: false, error: 'Phone and amount are required' });
+    }
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid amount' });
+    }
+
+    // For now: add balance directly (placeholder for EVC/Zaad integration)
+    const wallet = await prisma.wallet.upsert({
+      where: { userId: req.user.id },
+      update: { balance: { increment: parsedAmount } },
+      create: { userId: req.user.id, balance: parsedAmount },
+    });
+
+    // Record transaction
+    await prisma.transaction.create({
+      data: {
+        walletId: wallet.id,
+        userId: req.user.id,
+        type: 'DEPOSIT',
+        amount: parsedAmount,
+        balanceAfter: wallet.balance,
+        description: `Deposit via ${phone}`,
+      },
+    });
+
+    res.json({ success: true, message: 'Deposit initiated', balance: wallet.balance, newBalance: wallet.balance });
+  } catch (error) { next(error); }
+};
