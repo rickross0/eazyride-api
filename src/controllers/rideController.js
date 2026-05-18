@@ -6,31 +6,89 @@ const { prisma } = require('../config/database');
 const { AppError } = require('../middleware/errorHandler');
 const { paginate, paginationResponse } = require('../utils/helpers');
 const { calculateFare } = require('../services/fareService');
-const { getRoute } = require('../services/geoService');
+const { getRoute, reverseGeocode } = require('../services/geoService');
 const { emitToUser, emitToOnlineDrivers } = require('../services/socketService');
 const logger = require('../utils/logger');
 
+// Flatten ride for frontend compatibility
+const flattenRide = (ride) => {
+  if (!ride) return ride;
+  const flat = { ...ride };
+  if (ride.pickupCoordinates) {
+    flat.pickupLat = ride.pickupCoordinates.lat;
+    flat.pickupLng = ride.pickupCoordinates.lng;
+  }
+  if (ride.dropoffCoordinates) {
+    flat.dropoffLat = ride.dropoffCoordinates.lat;
+    flat.dropoffLng = ride.dropoffCoordinates.lng;
+  }
+  flat.fare = ride.totalFare || ride.fare || 0;
+  flat.total = ride.totalFare || ride.total || 0;
+  flat.distance = ride.estimatedDistance || 0;
+  flat.vehicleType = ride.vehicleType || 'sedan';
+  return flat;
+};
+
 exports.createRide = async (req, res, next) => {
   try {
-    const { pickupAddress, dropoffAddress, pickupCoordinates, dropoffCoordinates, vehicleType = 'sedan', paymentMethod = 'EVC_PLUS', promoCode } = req.body;
     const riderId = req.user.id;
+    let {
+      pickupAddress, dropoffAddress,
+      pickupCoordinates, dropoffCoordinates,
+      pickupLat, pickupLng, dropoffLat, dropoffLng,
+      vehicleType = 'BAJAJ', paymentMethod = 'EVC_PLUS', promoCode,
+    } = req.body;
 
-    const route = await getRoute(pickupCoordinates, dropoffCoordinates);
+    // Support both frontend formats: flat lat/lng OR nested coordinates
+    const pickup = pickupCoordinates || (pickupLat != null && pickupLng != null ? { lat: pickupLat, lng: pickupLng } : null);
+    const dropoff = dropoffCoordinates || (dropoffLat != null && dropoffLng != null ? { lat: dropoffLat, lng: dropoffLng } : null);
+
+    if (!pickup) throw new AppError('Pickup location required (pickupLat/pickupLng or pickupCoordinates)', 400);
+
+    // Default dropoff to nearby if not provided (quick-ride flow)
+    const effectiveDropoff = dropoff || { lat: pickup.lat + 0.005, lng: pickup.lng + 0.005 };
+
+    // Reverse-geocode addresses if not provided
+    if (!pickupAddress) {
+      try {
+        const geo = await reverseGeocode(pickup.lat, pickup.lng);
+        pickupAddress = geo.address || 'Pickup location';
+      } catch { pickupAddress = 'Pickup location'; }
+    }
+    if (!dropoffAddress && dropoff) {
+      try {
+        const geo = await reverseGeocode(dropoff.lat, dropoff.lng);
+        dropoffAddress = geo.address || 'Dropoff location';
+      } catch { dropoffAddress = 'Dropoff location'; }
+    }
+    if (!dropoffAddress) dropoffAddress = 'Nearby dropoff';
+
+    const route = await getRoute(pickup, effectiveDropoff);
     const fare = await calculateFare({ distance: route.distance, duration: route.duration, vehicleType, promoCode });
 
     const ride = await prisma.ride.create({
       data: {
-        riderId, pickupAddress, dropoffAddress, pickupCoordinates, dropoffCoordinates,
-        estimatedDistance: route.distance, estimatedDuration: Math.round(route.duration),
-        baseFare: fare.baseFare, distanceFare: fare.distanceFare, timeFare: fare.timeFare,
-        surgeFare: fare.surgeFare, totalFare: fare.totalFare, discountAmount: fare.discountAmount,
+        riderId,
+        pickupAddress,
+        dropoffAddress,
+        pickupCoordinates: pickup,
+        dropoffCoordinates: effectiveDropoff,
+        estimatedDistance: route.distance,
+        estimatedDuration: Math.round(route.duration),
+        baseFare: fare.baseFare,
+        distanceFare: fare.distanceFare,
+        timeFare: fare.timeFare,
+        surgeFare: fare.surgeFare,
+        totalFare: fare.totalFare,
+        discountAmount: fare.discountAmount,
         commissionAmount: fare.commissionAmount,
       },
     });
 
+    const flatRide = flattenRide(ride);
     emitToOnlineDrivers('ride:request', { rideId: ride.id, pickup: pickupAddress, dropoff: dropoffAddress, fare: fare.totalFare });
     logger.info(`Ride created: ${ride.id}`);
-    res.status(201).json({ success: true, data: ride });
+    res.status(201).json({ success: true, data: flatRide, ride: flatRide });
   } catch (error) { next(error); }
 };
 
@@ -38,10 +96,15 @@ exports.getRideById = async (req, res, next) => {
   try {
     const ride = await prisma.ride.findUnique({
       where: { id: req.params.id },
-      include: { rider: { select: { id: true, firstName: true, lastName: true, phone: true, avatar: true } }, driver: { select: { id: true, firstName: true, lastName: true, phone: true, avatar: true, driverProfile: true } }, offers: true },
+      include: {
+        rider: { select: { id: true, firstName: true, lastName: true, phone: true, avatar: true } },
+        driver: { select: { id: true, firstName: true, lastName: true, phone: true, avatar: true, driverProfile: true } },
+        offers: true,
+      },
     });
     if (!ride) throw new AppError('Ride not found', 404);
-    res.json({ success: true, data: ride });
+    const flatRide = flattenRide(ride);
+    res.json({ success: true, data: flatRide, ride: flatRide, driver: ride.driver, location: null });
   } catch (error) { next(error); }
 };
 
@@ -52,7 +115,7 @@ exports.acceptRide = async (req, res, next) => {
       data: { driverId: req.user.id, status: 'ACCEPTED' },
     });
     emitToUser(ride.riderId, 'ride:update', { rideId: ride.id, status: 'ACCEPTED', driverId: req.user.id });
-    res.json({ success: true, data: ride });
+    res.json({ success: true, data: flattenRide(ride) });
   } catch (error) { next(error); }
 };
 
@@ -71,7 +134,7 @@ exports.updateRideStatus = async (req, res, next) => {
     const updated = await prisma.ride.update({ where: { id: req.params.id }, data: updateData });
     emitToUser(updated.riderId, 'ride:update', { rideId: updated.id, status });
     if (updated.driverId) emitToUser(updated.driverId, 'ride:update', { rideId: updated.id, status });
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: flattenRide(updated) });
   } catch (error) { next(error); }
 };
 
@@ -112,7 +175,7 @@ exports.cancelRide = async (req, res, next) => {
     });
     if (ride.driverId) emitToUser(ride.driverId, 'ride:update', { rideId: ride.id, status: 'CANCELLED' });
     emitToUser(ride.riderId, 'ride:update', { rideId: ride.id, status: 'CANCELLED' });
-    res.json({ success: true, data: ride });
+    res.json({ success: true, data: flattenRide(ride) });
   } catch (error) { next(error); }
 };
 
@@ -126,6 +189,6 @@ exports.getAllRides = async (req, res, next) => {
       prisma.ride.findMany({ where, skip, take: l, orderBy: { createdAt: 'desc' }, include: { rider: { select: { firstName: true, lastName: true, phone: true } }, driver: { select: { firstName: true, lastName: true, phone: true, driverProfile: true } } } }),
       prisma.ride.count({ where }),
     ]);
-    res.json({ success: true, ...paginationResponse(rides, total, p, l) });
+    res.json({ success: true, ...paginationResponse(rides.map(flattenRide), total, p, l) });
   } catch (error) { next(error); }
 };
