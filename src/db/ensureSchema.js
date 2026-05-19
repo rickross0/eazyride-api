@@ -574,7 +574,6 @@ async function ensureSchema() {
       { table: 'Store', column: 'latitude', type: 'DOUBLE PRECISION', nullable: true },
       { table: 'Store', column: 'longitude', type: 'DOUBLE PRECISION', nullable: true },
       { table: 'Store', column: 'isPopular', type: 'BOOLEAN', nullable: false, default: false },
-      { table: 'PaymentTransaction', column: 'name', type: 'TEXT', nullable: true },
     ];
 
     for (const col of columns) {

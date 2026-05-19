@@ -120,24 +120,6 @@ const hoursDifference = (date1, date2) => {
 // Sleep function
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-module.exports = {
-  flattenRide,
-  generateId,
-  generateOrderNumber,
-  generateBookingNumber,
-  generatePin,
-  generateTicketNumber,
-  calculateDistance,
-  formatCurrency,
-  paginate,
-  paginationResponse,
-  slugify,
-  sanitize,
-  isFutureDate,
-  hoursDifference,
-  sleep
-};
-
 // Flatten ride coordinates for frontend compatibility
 const flattenRide = (ride) => {
   if (!ride) return ride;
@@ -156,3 +138,22 @@ const flattenRide = (ride) => {
   flat.vehicleType = ride.vehicleType || 'sedan';
   return flat;
 };
+
+module.exports = {
+  flattenRide,
+  generateId,
+  generateOrderNumber,
+  generateBookingNumber,
+  generatePin,
+  generateTicketNumber,
+  calculateDistance,
+  formatCurrency,
+  paginate,
+  paginationResponse,
+  slugify,
+  sanitize,
+  isFutureDate,
+  hoursDifference,
+  sleep
+};
+
