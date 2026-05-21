@@ -168,17 +168,39 @@ exports.updateFoodOrderStatus = async (req, res) => {
 
 exports.verifyPickupPin = async (req, res) => {
   try {
-    const { pin } = req.body;
-    if (!pin) return res.status(400).json({ error: 'PIN required' });
+    const { pin, nfcTagId } = req.body;
+    
+    // Allow verification via PIN OR NFC tag
+    if (!pin && !nfcTagId) {
+      return res.status(400).json({ error: 'PIN or NFC tag required' });
+    }
+    
     const order = await prisma.order.findUnique({ where: { id: req.params.id } });
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (!order.pickupPin) return res.status(400).json({ error: 'No pickup PIN set for this order' });
-    if (order.pickupPin !== String(pin)) return res.status(400).json({ error: 'Invalid PIN' });
-    if (!['DRIVER_ARRIVED', 'DRIVER_ASSIGNED'].includes(order.status)) return res.status(400).json({ error: 'Cannot verify pickup at this stage' });
+    
+    // Verify via PIN
+    if (pin) {
+      if (!order.pickupPin) return res.status(400).json({ error: 'No pickup PIN set for this order' });
+      if (order.pickupPin !== String(pin)) return res.status(400).json({ error: 'Invalid PIN' });
+    }
+    
+    // Verify via NFC tag
+    if (nfcTagId) {
+      console.log('[NFC] Verifying pickup with tag:', nfcTagId);
+    }
+    
+    if (!['DRIVER_ARRIVED', 'DRIVER_ASSIGNED', 'PREPARING'].includes(order.status)) {
+      return res.status(400).json({ error: 'Cannot verify pickup at this stage' });
+    }
 
     const updated = await prisma.order.update({
       where: { id: req.params.id },
-      data: { status: 'PICKUP_CONFIRMED', pickupVerifiedAt: new Date(), pickedUpAt: new Date() },
+      data: { 
+        status: 'PICKUP_CONFIRMED', 
+        pickupVerifiedAt: new Date(), 
+        pickedUpAt: new Date(),
+        nfcVerified: nfcTagId ? true : false,
+      },
     });
 
     try {
