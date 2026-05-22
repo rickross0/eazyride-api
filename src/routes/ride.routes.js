@@ -3,9 +3,16 @@ const router = express.Router();
 const rideController = require('../controllers/rideController');
 const { authenticate } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roleCheck');
-const { createRideValidation } = require('../utils/validators');
 
 router.use(authenticate);
+
+// Debug: log every ride request
+router.use((req, res, next) => {
+  console.log(`[RIDE ROUTE] ${req.method} ${req.path} — user: ${req.user?.id}, role: ${req.user?.role}`);
+  console.log('[RIDE ROUTE] BODY:', JSON.stringify(req.body));
+  next();
+});
+
 router.post('/', requireRole('RIDER'), rideController.createRide);
 router.get('/all', requireRole('ADMIN'), rideController.getAllRides);
 router.get('/:id', rideController.getRideById);

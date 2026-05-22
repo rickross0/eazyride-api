@@ -14,6 +14,7 @@ const routes = require('./routes');
 const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // ============================================================
 // SECURITY MIDDLEWARE
