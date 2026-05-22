@@ -10,7 +10,8 @@ const logger = require('../utils/logger');
 
 exports.createSOS = async (req, res, next) => {
   try {
-    const { location, address, message, rideId, orderId } = req.body;
+    const { latitude, longitude, address, message, rideId, orderId } = req.body;
+    const location = (latitude != null && longitude != null) ? { lat: Number(latitude), lng: Number(longitude) } : null;
     const alert = await prisma.sOSAlert.create({
       data: { userId: req.user.id, location, address, message, rideId, orderId, status: 'ACTIVE' },
     });

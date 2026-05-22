@@ -192,3 +192,9 @@ router.put('/support/contacts', requirePermission('UPDATE_SUPPORT'), async (req,
 });
 
 module.exports = router;
+
+// SOS Alerts (admin aliases)
+const sosController = require('../controllers/sosController');
+router.get('/sos', sosController.getAllAlerts);
+router.get('/sos/active', sosController.getActiveAlerts);
+router.patch('/sos/:id/resolve', sosController.resolveSOS);
