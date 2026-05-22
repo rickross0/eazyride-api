@@ -11,7 +11,7 @@ import TermsModal from './TermsModal';
 import LegalPage from './LegalPage';
 import gsap from './gsap-utils';
 
-const RELEASE_BASE = 'https://github.com/rickross0/EazyRide-Haye-APKs/releases/download/v3.0.0/';
+const RELEASE_BASE = 'https://github.com/rickross0/eazyride-super-app/raw/master/';
 import ThreeGlobe from './ThreeGlobe';
 import VoiceNarrator from './VoiceNarrator';
 import AIChatbot from './AIChatbot';
@@ -664,9 +664,9 @@ function Downloads({ onOpenLegal }: { onOpenLegal: () => void }) {
 
   const apks = [{
     name: t('downloads.rider'),
-    file: 'EazyRide-Rider-v3.0.0.apk',
-    size: '87 MB',
-    desc: 'Rides • Food • Cars • Delivery - All in One App'
+    file: 'EazyRide-Haye-v5.1.0.apk',
+    size: '~120 MB',
+    desc: 'Super App - All in One Solution'
   }];
 
   const handleDownload = useCallback((file: string) => {
