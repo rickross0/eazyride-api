@@ -4,7 +4,7 @@
 
 const { prisma } = require('../config/database');
 const { AppError } = require('../middleware/errorHandler');
-const { paginate, paginationResponse } = require('../utils/helpers');
+const { paginate, paginationResponse, flattenRide } = require('../utils/helpers');
 const { calculateFare } = require('../services/fareService');
 const { getRoute, reverseGeocode } = require('../services/geoService');
 const { emitToUser, emitToOnlineDrivers } = require('../services/socketService');
