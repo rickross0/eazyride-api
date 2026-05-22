@@ -662,12 +662,12 @@ function Downloads({ onOpenLegal }: { onOpenLegal: () => void }) {
   const [showWarning, setShowWarning] = useState(false);
   const [downloadCount, setDownloadCount] = useState(0);
 
-  const apks = [
-    { name: t('downloads.rider'), file: 'EazyRide-Rider-v3.0.0.apk', size: '87 MB' },
-    { name: t('downloads.driver'), file: 'EazyRide-Driver-v3.0.0.apk', size: '37 MB' },
-    { name: t('downloads.store'), file: 'EazyRide-StoreOwner-v3.0.0.apk', size: '87 MB' },
-    { name: t('downloads.provider'), file: 'EazyRide-Provider-v3.0.0.apk', size: '38 MB' }
-  ];
+  const apks = [{
+    name: t('downloads.rider'),
+    file: 'EazyRide-Rider-v3.0.0.apk',
+    size: '87 MB',
+    desc: 'Rides • Food • Cars • Delivery - All in One App'
+  }];
 
   const handleDownload = useCallback((file: string) => {
     if (!termsAccepted) { setShowWarning(true); return; }
@@ -697,7 +697,7 @@ function Downloads({ onOpenLegal }: { onOpenLegal: () => void }) {
           </label>
           {showWarning && <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-red-400 text-sm font-semibold text-center">⚠️ {t('terms.mustAgree')}</motion.p>}
         </motion.div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex justify-center gap-6 flex-wrap">
           {apks.map((apk, i) => (
             <motion.button key={i} whileHover={{ scale: 1.08, boxShadow: '0 0 40px rgba(0,188,212,0.5)' }} whileTap={{ scale: 0.97 }}
               onClick={() => handleDownload(apk.file)}
@@ -705,6 +705,7 @@ function Downloads({ onOpenLegal }: { onOpenLegal: () => void }) {
               <Download className="w-14 h-14 mx-auto mb-4 text-cyan group-hover:text-gold group-hover:rotate-12 transition-all" />
               <h3 className="text-xl font-bold mb-2">{apk.name}</h3>
               <p className="opacity-80 text-sm">{apk.size}</p>
+              <p className="opacity-60 text-xs mt-1">{apk.desc}</p>
               <div className="absolute inset-0 bg-gradient-to-r from-cyan/10 to-gold/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             </motion.button>
           ))}

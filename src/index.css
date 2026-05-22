@@ -87,3 +87,22 @@ body {
   50% { box-shadow: 0 0 50px rgba(0,188,212,0.9); }
 }
 .glow-pulse { animation: glowPulse 2s infinite; }
+
+/* ── v6.3 Theme Variables ── */
+.dark-theme {
+  --bg-gradient: linear-gradient(to bottom, #0a1428, #000);
+  --bg-solid: #0a1428;
+  --text-primary: #ffffff;
+  --text-secondary: #a0aec0;
+}
+.light-theme {
+  --bg-gradient: linear-gradient(to bottom, #87CEEB, #0a1428);
+  --bg-solid: #f0f8ff;
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+}
+
+.dark-theme body,
+.light-theme body {
+  background: var(--bg-gradient);
+}

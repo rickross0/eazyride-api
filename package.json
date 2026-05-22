@@ -10,10 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@tailwindcss/postcss": "^4.2.4",
     "@tsparticles/engine": "^3.9.1",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.9.1",
+    "@types/three": "^0.184.0",
     "autoprefixer": "^10.5.0",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^12.38.0",
@@ -27,7 +30,8 @@
     "react-i18next": "^17.0.6",
     "react-intersection-observer": "^10.0.3",
     "swiper": "^12.1.4",
-    "tailwindcss": "^4.2.4"
+    "tailwindcss": "^4.2.4",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -30,4 +30,9 @@ function Root() {
   );
 }
 
+
+// Register service worker for PWA
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(console.error);
+}
 ReactDOM.createRoot(document.getElementById('root')!).render(<Root />);

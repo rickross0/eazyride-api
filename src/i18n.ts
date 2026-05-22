@@ -32,6 +32,28 @@ const resources = {
       switchEn: 'English',
       switchSo: 'Soomaali',
       switchAr: 'العربية',
+      footer: {
+        legal: 'Legal',
+        terms: 'Terms & Conditions',
+        privacy: 'Privacy Policy',
+        rider: 'Rider Agreement',
+        driver: 'Driver Agreement',
+        restaurant: 'Restaurant Agreement',
+        carrental: 'Car Rental Terms',
+        community: 'Community Guidelines',
+        refund: 'Refund Policy',
+        aml: 'AML & KYC',
+        databreach: 'Data Breach Policy',
+        eula: 'EULA',
+        dpa: 'Data Processing',
+        dispute: 'Dispute Resolution',
+        admin: 'Admin Agreement',
+        forcemajeure: 'Force Majeure',
+        aup: 'Acceptable Use',
+        copyright: '© 2026 BinMahfuud LTD. All rights reserved.',
+        operated: 'EazyRide + Haye! is operated by BinMahfuud LTD.',
+        madeIn: 'Made in Somalia 🇸🇴'
+      },
       benefits: {
         title: 'Who Benefits and How',
         rider: {
@@ -132,6 +154,28 @@ const resources = {
       switchEn: 'English',
       switchSo: 'Soomaali',
       switchAr: 'Carabi',
+      footer: {
+        legal: 'Sharciga',
+        terms: "Shuruudaha & Qaa'dada",
+        privacy: 'Astaanka Qarsoodiga',
+        rider: 'Heshiiska Ridaaga',
+        driver: 'Heshiiska Darawalka',
+        restaurant: 'Heshiiska Maqaayadda',
+        carrental: 'Shuruudda Kirada',
+        community: 'Hagaagga Bulshada',
+        refund: 'Siyaasadda Lacag-celinta',
+        aml: 'AML & KYC',
+        databreach: 'Siyaasadda Xadgudubka Xogta',
+        eula: 'EULA',
+        dpa: 'Habaynta Xogta',
+        dispute: 'Xalka Muranka',
+        admin: 'Heshiiska Mamnuc',
+        forcemajeure: 'Hawl-qaladka',
+        aup: 'Isticmaalka Lagu Ogol yahay',
+        copyright: '© 2026 BinMahfuud LTD. Dhammaan xaquuqda waa la ilaalay.',
+        operated: 'EazyRide + Haye! waxaa shaqeynaysa BinMahfuud LTD.',
+        madeIn: 'Laga sameeyay Soomaaliya 🇸🇴'
+      },
       benefits: {
         title: "Yaa Ka Faa'iidooda iyo Sida",
         rider: {
@@ -140,63 +184,63 @@ const resources = {
           benefits: [
             'Raacyada — Bajaj lagu soo qaato daqiiqado gudahood, raad-raaca GPS, qiime cadaalad ah',
             'Gaadiidka Cunnada — Ka dalbo maqaayadaha maxalliga ah raad-raaca gaadiidka',
-            'Kirada Gaadiidka — Gaadiid saac/habeen ah oo leh ilaalin escrow',
-            'Loteriga — Ka qeyb qaado tartanka halka aan la isticmaalinaayo app-ka',
-            'Fariin SOS — Fariin degdeg ah oo hal-taabo ah oo leh goobta',
-            'Chat — La wada hadal si toos ah baabuur wadata inta raacda',
-            'Lacag-bixinta EVC/Zaad — Ku lacag-bixi lacagta mobil-ka Soomaaliya',
-            'Raad-raac wakhtiga dhabta ah — Eeg baabuurka kuu soo dhowaatay live'
+            'Kirada gaadiidka — Saac/galab gaari oo escrow ilaashado',
+            'Labaad — Ka qaadso tartan halka aad app-ka isticmaalayso',
+            'SOS — Hal taabo degdeg raad-raaca goobta',
+            'Wada sheekasho — La wada sheeko darawalka safarka',
+            'EVC/Zaad — Lacag bixi telefoon Soomaali',
+            'Raad-raac wakhtiga dhabta — Daawo darawalka khariidada'
           ]
         },
         driver: {
-          who: 'App Driver — Kastuumo-saare',
-          for: 'Darawalada leh Bajaj, baabuur-yar, ama gaari ee doonaya inay kastumo.',
+          who: 'App Driver — Lacag-bixi',
+          for: 'Darawal Bajaj, baaskil, ama gaari ee raba inay lacag bixdaan.',
           benefits: [
-            'Dhooble kastumo — Aqbal codsiga raac iyo dalabka gaadiidka cunnada',
-            'Goob wakhtiga dhabta ah — Waxaa la muujinayaa raacayaasha si qabashadu ay sahlan tahay',
-            'Chat — La wada shaqee raacayaasha adigoon telefoon wacin',
-            'Nidaamka komishanka — Qaybta cad ee lacagta, bixinta otomaatiga ah',
-            'Dashboard-ka darawalka — Raad-raac qiimeeynta, tiro raacyo, taariikhda kastumada',
-            'Toggle online — Noqo offline/online marka aad rabto'
+            'Laba dakhli — Raac iyo cunto labadaba',
+            'Goobta wakhtiga dhabta — Ridaagu arkaa si ay u soo qaataan',
+            'Wada sheekasho — La sheeko ridaaga telefoon la\'aan',
+            'Komishan — Qaybsasho cadd, lacag-bixi otomaatiko',
+            'Dashboard — Tirsi, safarro, dakhli',
+            'Online toggle — Online/offline markaad rabto'
           ]
         },
         store: {
-          who: 'App Mulkiilaha Dukaan — Farsamaha Cuntada',
-          for: 'Mulkiilaha maqaayadaha iyo dukaamanka ee doonaya inay gaaraan macaamiil badan.',
+          who: 'App Mulkiilaha Dukaan — Maqaayad',
+          for: 'Maqaayad iyo dukaan mulkiilayaal ee raba macaamil badan.',
           benefits: [
-            'Maareeynta dalabka — Aqbal oo maaree dalabka gaadiidka wakhtiga dhabta ah',
-            'Dashboard-ka menu-ka — Cusboonaysii walxaha, qiimaha, iyo helitaanka degdeg ah',
-            'Raad-raac dakhliga — Eeg dakhliga maalinlaha/toddobaadka iyo falanqaynta',
-            'Gaarista macaamilka — Heli kumaan raacaya ah oo ku dhow',
-            'Dalabyada — Samee dalabyo iyo dakhilo si aad u kordhiso iibka'
+            'Maareyn dalbasho — Aqbi iyo maareyn wakhtiga dhabta',
+            'Menu dashboard — Cunto, qiime, helitaan degdeg',
+            'Dakhli — Maalinlaha/todobaadkiiga iyo analytics',
+            'Macaamil — Kunan ridaag kuu soo dhow',
+            'Dallac — Qiime yaraan iigo kordhi'
           ]
         },
         provider: {
-          who: 'App Bixiyaha — Maareeyaha Flit-ka',
-          for: 'Bixiyayaasha kirada gaadiidka ee maareynaya flit-yada oo doonaya hawlgab xasaasi.',
+          who: 'App Bixiyaha — Flit Manager',
+          for: 'Bixiyayaasha kirada gaadiidka ee raba hawlo cadaalad.',
           benefits: [
-            'Maareeynta flit-ka — Ku dar, raad, oo maaree dhamaan gaadiidadkaada',
-            'Nidaamka escrow — Dhigisyada iyo lacag-bixinta ammaan leh oo cad',
-            'Dashboard-ka dalabka — Eeg dhamaan dalabka kirada, kirada fircoon, iyo soo celinta',
-            'Warbixinta dakhliga — Faahfaahin dhexmaray dakhliga gaadiid kasta',
-            'Xaqiijinta darawalka — Xaqiiji oo ansixi darawal ka hor kirada'
+            'Flit maareyn — Ku dar, raad, iyo maaree dhammaan gaadiidka',
+            'Escrow — Deposit iyo lacag-bixin amaan',
+            'Booking dashboard — Dalbasho, kirada firfircoon, celin',
+            'Dakhli qor — Faahfaahin gaari gaari',
+            'Darawal xaqiijin — Xaqiiji ka hor kirada'
           ]
         },
         table: {
           app: 'App',
           who: 'Yaa',
-          mainBenefit: 'Faa\'iidadayda Guud',
+          mainBenefit: "Faa'iidada Guud",
           riderApp: 'Rider',
           riderWho: 'Macaamil',
-          riderBenefit: 'Wax kasta on-demand, ammaan & maxalli',
+          riderBenefit: 'Dhammaan dalbo, ammaan & maxalli',
           driverApp: 'Driver',
-          driverWho: 'Kastuumo-saare',
-          driverBenefit: 'Dhooble dakhli oo raac iyo gaadiid',
-          storeApp: 'Store',
-          storeWho: 'Farsamaha Cuntada',
-          storeBenefit: 'Gaar macaamiil kun kun cusub',
-          providerApp: 'Provider',
-          providerWho: 'Maareeyaha Flit-ka',
+          driverWho: 'Lacag-bixi',
+          driverBenefit: 'Laba dakhli safar & gaadiid',
+          storeApp: 'Dukaan',
+          storeWho: 'Maqaayad',
+          storeBenefit: 'Kunan macaamil cusub',
+          providerApp: 'Bixiyaha',
+          providerWho: 'Flit Manager',
           providerBenefit: 'Maareyn flit & escrow cad'
         }
       }
@@ -232,6 +276,28 @@ const resources = {
       switchEn: 'English',
       switchSo: 'الصومالية',
       switchAr: 'العربية',
+      footer: {
+        legal: 'قانوني',
+        terms: 'الشروط والأحكام',
+        privacy: 'سياسة الخصوصية',
+        rider: 'اتفاقية الراكب',
+        driver: 'اتفاقية السائق',
+        restaurant: 'اتفاقية المطعم',
+        carrental: 'شروط الإيجار',
+        community: 'إرشادات المجتمع',
+        refund: 'سياسة الاسترداد',
+        aml: 'مكافحة غسل الأموال',
+        databreach: 'سياسة خرق البيانات',
+        eula: 'اتفاقية الترخيص',
+        dpa: 'معالجة البيانات',
+        dispute: 'حل النزاعات',
+        admin: 'اتفاقية المشرفين',
+        forcemajeure: 'القوة القاهرة',
+        aup: 'الاستخدام المقبول',
+        copyright: '© 2026 BinMahfuud LTD. جميع الحقوق محفوظة.',
+        operated: 'إيزي رايد + هاي! تديرها BinMahfuud LTD.',
+        madeIn: 'صنع في الصومال 🇸🇴'
+      },
       benefits: {
         title: 'من يستفيد وكيف',
         rider: {
