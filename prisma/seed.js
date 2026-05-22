@@ -125,6 +125,10 @@ async function main() {
     create: { type: 'ABOUT', content: 'EazyRide + Haye! — The Premium Super-App for Somalia. "Fast & Safe" • "The Answer For All"', version: '3.0.0' },
   });
 
+  // Fare Settings
+  await prisma.fareSetting.upsert({ where: { vehicleType: "BAJAJ" }, update: {}, create: { vehicleType: "BAJAJ", baseFare: 0.8, perKmRate: 0.3, perMinuteRate: 0.05, minimumFare: 1.5 } });
+  await prisma.fareSetting.upsert({ where: { vehicleType: "CAR" }, update: {}, create: { vehicleType: "CAR", baseFare: 1.5, perKmRate: 0.5, perMinuteRate: 0.08, minimumFare: 3.0 } });
+
   console.log('✅ Seed completed for v3.0.0');
   console.log(`  Admin: admin@eazyride.com / admin123`);
   console.log(`  Rider: customer@test.com / test123`);
