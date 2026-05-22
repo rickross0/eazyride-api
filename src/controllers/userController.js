@@ -6,6 +6,14 @@ const { prisma } = require('../config/database');
 const { AppError } = require('../middleware/errorHandler');
 const { paginate, paginationResponse } = require('../utils/helpers');
 
+const getImageUrl = (req) => {
+  if (req.file) {
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    return `${baseUrl}/uploads/${req.file.filename}`;
+  }
+  return null;
+};
+
 exports.getProfile = async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
@@ -20,10 +28,11 @@ exports.getProfile = async (req, res, next) => {
 
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, avatar } = req.body;
+    const { firstName, lastName, email } = req.body;
+    const imageUrl = getImageUrl(req);
     const user = await prisma.user.update({
       where: { id: req.user.id },
-      data: { ...(firstName && { firstName }), ...(lastName && { lastName }), ...(email && { email }), ...(avatar && { avatar }) },
+      data: { ...(firstName && { firstName }), ...(lastName && { lastName }), ...(email && { email }), ...(imageUrl && { avatar: imageUrl }) },
     });
     const { password, ...data } = user;
     res.json({ success: true, message: 'Profile updated', data });
