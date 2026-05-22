@@ -8,7 +8,8 @@ const { body, param, query, validationResult } = require('express-validator');
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, errors: errors.array() });
+    const messages = errors.array().map(e => e.msg).join('; ');
+    return res.status(400).json({ success: false, error: messages });
   }
   next();
 };
@@ -19,7 +20,6 @@ const registerValidation = [
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 chars'),
   body('firstName').trim().notEmpty().withMessage('First name required'),
   body('lastName').trim().notEmpty().withMessage('Last name required'),
-  body('role').isIn(['RIDER', 'DRIVER', 'STORE_OWNER', 'SERVICE_PROVIDER']).withMessage('Invalid role'),
   validate,
 ];
 
@@ -29,12 +29,13 @@ const loginValidation = [
   validate,
 ];
 
-// Ride validation
+// Ride validation — coordinates are optional since controller handles both flat lat/lng and nested formats
 const createRideValidation = [
-  body("pickupAddress").optional().notEmpty().withMessage('Pickup address required'),
-  body("dropoffAddress").optional().notEmpty().withMessage('Dropoff address required'),
-  body('pickupCoordinates').isObject().withMessage('Pickup coordinates required'),
-  body('dropoffCoordinates').isObject().withMessage('Dropoff coordinates required'),
+  body('pickupAddress').optional().trim().notEmpty().withMessage('Pickup address required'),
+  body('dropoffAddress').optional().trim().notEmpty().withMessage('Dropoff address required'),
+  body('pickupCoordinates').optional().isObject().withMessage('Pickup coordinates must be an object'),
+  body('dropoffCoordinates').optional().isObject().withMessage('Dropoff coordinates must be an object'),
+  body('vehicleType').optional().isIn(['BAJAJ', 'CAR']).withMessage('Vehicle type must be BAJAJ or CAR'),
   validate,
 ];
 
@@ -60,25 +61,24 @@ const createBookingValidation = [
 // Lottery validation
 const createLotteryValidation = [
   body('title').trim().notEmpty().withMessage('Title required'),
-  
-  body('entryLimit').optional().isInt({ min: 1 }).withMessage('Valid entry limit'),
-  body('prizePool').isFloat({ min: 1 }).withMessage('Prize pool required'),
-  body('drawDate').isISO8601().withMessage('Valid draw date required'),
+  body('description').optional().trim(),
+  body('startDate').isISO8601().withMessage('Valid start date required'),
+  body('endDate').isISO8601().withMessage('Valid end date required'),
   validate,
 ];
 
 // Promo code validation
 const createPromoCodeValidation = [
-  body('code').trim().notEmpty().isLength({ min: 3 }).withMessage('Code must be at least 3 chars'),
-  body('discountType').isIn(['PERCENTAGE', 'FLAT']).withMessage('Invalid discount type'),
-  body('discountValue').isFloat({ min: 0.01 }).withMessage('Valid discount value required'),
+  body('code').trim().notEmpty().withMessage('Code required'),
+  body('discountType').isIn(['PERCENTAGE', 'FIXED']).withMessage('Invalid discount type'),
+  body('discountValue').isFloat({ min: 0 }).withMessage('Discount value must be positive'),
   validate,
 ];
 
 // Promotion validation
 const createPromotionValidation = [
   body('title').trim().notEmpty().withMessage('Title required'),
-  body('type').isIn(['BANNER', 'POPUP', 'NOTIFICATION', 'IN_APP']).withMessage('Invalid promotion type'),
+  body('description').optional().trim(),
   body('startDate').isISO8601().withMessage('Valid start date required'),
   body('endDate').isISO8601().withMessage('Valid end date required'),
   validate,
