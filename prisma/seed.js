@@ -92,21 +92,26 @@ async function main() {
 
   // ── STORE: Hilib Geel Restaurant ──
   const sop = await prisma.storeOwnerProfile.findUnique({ where: { userId: storeOwnerUser.id } });
-  const store = await prisma.store.upsert({
-    where: { name: 'Hilib Geel Restaurant' },
-    update: {},
-    create: {
-      name: 'Hilib Geel Restaurant',
-      description: 'Best Somali food in town',
-      phone: '+252615550010',
-      address: 'Mogadishu, Somalia',
-      coordinates: { lat: 2.0469, lng: 45.3182 },
-      category: 'somali',
-      deliveryFee: 1.0, minOrder: 3,
-      isOpen: true, isActive: true, rating: 4.5,
-      ownerId: sop?.id || undefined,
-    },
-  });
+  let store = await prisma.store.findFirst({ where: { name: 'Hilib Geel Restaurant' } });
+  if (!store) {
+    store = await prisma.store.create({
+      data: {
+        name: 'Hilib Geel Restaurant',
+        description: 'Best Somali food in town. Authentic flavors, fresh ingredients, and warm hospitality since 2010.',
+        phone: '+252615550010',
+        address: 'Shangani District, Mogadishu, Somalia',
+        coordinates: { lat: 2.0469, lng: 45.3182 },
+        category: 'somali',
+        cuisine: 'Somali',
+        imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
+        coverImageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&q=80',
+        deliveryFee: 1.0, minOrder: 3,
+        openingTime: '07:00', closingTime: '22:00',
+        isOpen: true, isActive: true, rating: 4.5,
+        ownerId: sop?.id || null,
+      },
+    });
+  }
 
   // Link store back to owner profile
   if (sop && !sop.storeId) {
@@ -114,25 +119,23 @@ async function main() {
   }
 
   // Store Categories
-  const catMain = await prisma.storeCategory.upsert({
-    where: { id: 'cat-main-dishes' },
-    update: {},
-    create: { name: 'Main Dishes', storeId: store.id, sortOrder: 1 },
-  });
-  const catSides = await prisma.storeCategory.upsert({
-    where: { id: 'cat-sides' },
-    update: {},
-    create: { name: 'Sides & Drinks', storeId: store.id, sortOrder: 2 },
-  });
+  let catMain = await prisma.storeCategory.findFirst({ where: { name: 'Main Dishes', storeId: store.id } });
+  if (!catMain) {
+    catMain = await prisma.storeCategory.create({ data: { name: 'Main Dishes', storeId: store.id, sortOrder: 1 } });
+  }
+  let catSides = await prisma.storeCategory.findFirst({ where: { name: 'Sides & Drinks', storeId: store.id } });
+  if (!catSides) {
+    catSides = await prisma.storeCategory.create({ data: { name: 'Sides & Drinks', storeId: store.id, sortOrder: 2 } });
+  }
 
   // Menu Items
   const menuItems = [
-    { name: 'Hilib Geel (Goat Meat)', description: 'Tender goat meat with spices', price: 8.0, categoryId: catMain.id, isPopular: true, isSpicy: true, preparationTime: 20 },
-    { name: 'Bariis Iskukaris', description: 'Somali rice with meat and vegetables', price: 6.5, categoryId: catMain.id, isPopular: true, preparationTime: 15 },
-    { name: 'Suqaar (Beef Stir-fry)', description: 'Diced beef with onions and peppers', price: 7.0, categoryId: catMain.id, preparationTime: 18 },
-    { name: 'Malawax (Sweet Pancakes)', description: 'Somali sweet pancakes with honey', price: 3.0, categoryId: catSides.id, preparationTime: 10 },
-    { name: 'Shaah (Somali Tea)', description: 'Traditional spiced tea with milk', price: 1.5, categoryId: catSides.id, preparationTime: 5 },
-    { name: 'Mango Juice', description: 'Fresh mango juice', price: 2.5, categoryId: catSides.id, preparationTime: 3 },
+    { name: 'Hilib Geel (Goat Meat)', description: 'Tender goat meat slow-cooked with Somali spices', price: 8.0, categoryId: catMain.id, isPopular: true, isSpicy: true, preparationTime: 20, imageUrl: 'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400&q=80' },
+    { name: 'Bariis Iskukaris', description: 'Fragrant Somali rice with tender meat and vegetables', price: 6.5, categoryId: catMain.id, isPopular: true, preparationTime: 15, imageUrl: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400&q=80' },
+    { name: 'Suqaar (Beef Stir-fry)', description: 'Diced beef with onions, peppers and xawaash', price: 7.0, categoryId: catMain.id, preparationTime: 18, imageUrl: 'https://images.unsplash.com/photo-1543339308-43e59d6b8a22?w=400&q=80' },
+    { name: 'Malawax (Sweet Pancakes)', description: 'Light Somali pancakes served with honey and ghee', price: 3.0, categoryId: catSides.id, preparationTime: 10, imageUrl: 'https://images.unsplash.com/photo-1506084868230-bb9d95c24775?w=400&q=80' },
+    { name: 'Shaah (Somali Tea)', description: 'Traditional spiced black tea with milk and cardamom', price: 1.5, categoryId: catSides.id, preparationTime: 5, imageUrl: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=80' },
+    { name: 'Mango Juice', description: 'Freshly blended sweet mango juice', price: 2.5, categoryId: catSides.id, preparationTime: 3, imageUrl: 'https://images.unsplash.com/photo-1546173159-315724a3166d?w=400&q=80' },
   ];
   for (const mi of menuItems) {
     await prisma.menuItem.upsert({
@@ -152,7 +155,7 @@ async function main() {
         pricePerHour: 3, pricePerDay: 25,
         seats: 5, fuelType: 'petrol', transmission: 'automatic',
         description: 'Comfortable sedan for city rides',
-        features: ['AC', 'Bluetooth', 'GPS', 'USB Charging'],
+        features: JSON.stringify(['AC', 'Bluetooth', 'GPS', 'USB Charging']),
       },
       {
         make: 'Toyota', model: 'Hilux', year: 2022, color: 'Silver',
@@ -160,7 +163,7 @@ async function main() {
         pricePerHour: 5, pricePerDay: 40,
         seats: 5, fuelType: 'diesel', transmission: 'manual',
         description: 'Rugged pickup for off-road and cargo',
-        features: ['4x4', 'AC', 'Tow Hitch', 'Roof Rack'],
+        features: JSON.stringify(['4x4', 'AC', 'Tow Hitch', 'Roof Rack']),
       },
       {
         make: 'Nissan', model: 'Sunny', year: 2021, color: 'Black',
@@ -168,7 +171,7 @@ async function main() {
         pricePerHour: 2.5, pricePerDay: 20,
         seats: 4, fuelType: 'petrol', transmission: 'automatic',
         description: 'Budget-friendly sedan for daily use',
-        features: ['AC', 'Radio', 'Power Windows'],
+        features: JSON.stringify(['AC', 'Radio', 'Power Windows']),
       },
     ];
     for (const c of cars) {
