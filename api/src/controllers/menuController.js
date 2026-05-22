@@ -5,6 +5,14 @@
 const { prisma } = require('../config/database');
 const { AppError } = require('../middleware/errorHandler');
 
+function getImageUrl(req) {
+  if (req.file) {
+    const host = req.get('host');
+    return `${req.protocol}://${host}/uploads/${req.file.filename}`;
+  }
+  return null;
+}
+
 exports.getMenuItems = async (req, res, next) => {
   try {
     const { storeId } = req.params;
@@ -27,14 +35,22 @@ exports.getMenuItemById = async (req, res, next) => {
 
 exports.createMenuItem = async (req, res, next) => {
   try {
-    const item = await prisma.menuItem.create({ data: req.body });
+    const imageUrl = getImageUrl(req);
+    const data = { ...req.body };
+    if (imageUrl) data.imageUrl = imageUrl;
+    else if (req.body.imageUrl !== undefined) data.imageUrl = req.body.imageUrl || null;
+    const item = await prisma.menuItem.create({ data });
     res.status(201).json({ success: true, data: item });
   } catch (error) { next(error); }
 };
 
 exports.updateMenuItem = async (req, res, next) => {
   try {
-    const item = await prisma.menuItem.update({ where: { id: req.params.id }, data: req.body });
+    const imageUrl = getImageUrl(req);
+    const data = { ...req.body };
+    if (imageUrl) data.imageUrl = imageUrl;
+    else if (req.body.imageUrl !== undefined) data.imageUrl = req.body.imageUrl || null;
+    const item = await prisma.menuItem.update({ where: { id: req.params.id }, data });
     res.json({ success: true, data: item });
   } catch (error) { next(error); }
 };

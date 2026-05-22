@@ -6,6 +6,14 @@ const { prisma } = require('../config/database');
 const { AppError } = require('../middleware/errorHandler');
 const { paginate, paginationResponse } = require('../utils/helpers');
 
+function getImageUrl(req) {
+  if (req.file) {
+    const host = req.get('host');
+    return `${req.protocol}://${host}/uploads/${req.file.filename}`;
+  }
+  return null;
+}
+
 exports.getStores = async (req, res, next) => {
   try {
     const { page = 1, limit = 20, category, isOpen } = req.query;
@@ -42,14 +50,21 @@ exports.getMyStore = async (req, res, next) => {
 
 exports.createStore = async (req, res, next) => {
   try {
-    const store = await prisma.store.create({ data: req.body });
+    const data = { ...req.body };
+    const imageUrl = getImageUrl(req);
+    if (imageUrl) data.imageUrl = imageUrl;
+    const store = await prisma.store.create({ data });
     res.status(201).json({ success: true, data: store });
   } catch (error) { next(error); }
 };
 
 exports.updateStore = async (req, res, next) => {
   try {
-    const store = await prisma.store.update({ where: { id: req.params.id }, data: req.body });
+    const data = { ...req.body };
+    const imageUrl = getImageUrl(req);
+    if (imageUrl) data.imageUrl = imageUrl;
+    else if (req.body.imageUrl !== undefined) data.imageUrl = req.body.imageUrl || null;
+    const store = await prisma.store.update({ where: { id: req.params.id }, data });
     res.json({ success: true, data: store });
   } catch (error) { next(error); }
 };
