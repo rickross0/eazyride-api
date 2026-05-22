@@ -135,7 +135,7 @@ const flattenRide = (ride) => {
   flat.fare = ride.totalFare || ride.fare || 0;
   flat.total = ride.totalFare || ride.total || 0;
   flat.distance = ride.estimatedDistance || 0;
-  flat.vehicleType = ride.vehicleType || 'sedan';
+  flat.vehicleType = ride.vehicleType || 'BAJAJ';
   return flat;
 };
 

@@ -89,7 +89,7 @@ exports.createRide = async (req, res, next) => {
     });
 
     const flatRide = flattenRide(ride);
-    emitToOnlineDrivers('ride:request', { rideId: ride.id, pickup: pickupAddress, dropoff: dropoffAddress, fare: fare.totalFare });
+    emitToOnlineDrivers('ride:request', { rideId: ride.id, pickup: pickupAddress, dropoff: dropoffAddress, fare: fare.totalFare, vehicleType });
     logger.info(`Ride created: ${ride.id}`);
     res.status(201).json({ success: true, data: flatRide, ride: flatRide });
   } catch (error) { next(error); }
