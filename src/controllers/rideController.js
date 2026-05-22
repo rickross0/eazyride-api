@@ -10,24 +10,6 @@ const { getRoute, reverseGeocode } = require('../services/geoService');
 const { emitToUser, emitToOnlineDrivers } = require('../services/socketService');
 const logger = require('../utils/logger');
 
-// Flatten ride for frontend compatibility
-const flattenRide = (ride) => {
-  if (!ride) return ride;
-  const flat = { ...ride };
-  if (ride.pickupCoordinates) {
-    flat.pickupLat = ride.pickupCoordinates.lat;
-    flat.pickupLng = ride.pickupCoordinates.lng;
-  }
-  if (ride.dropoffCoordinates) {
-    flat.dropoffLat = ride.dropoffCoordinates.lat;
-    flat.dropoffLng = ride.dropoffCoordinates.lng;
-  }
-  flat.fare = ride.totalFare || ride.fare || 0;
-  flat.total = ride.totalFare || ride.total || 0;
-  flat.distance = ride.estimatedDistance || 0;
-  flat.vehicleType = ride.vehicleType || 'BAJAJ';
-  return flat;
-};
 
 exports.createRide = async (req, res, next) => {
   try {
