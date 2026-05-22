@@ -85,7 +85,7 @@ const Nav = () => {
                 {link.name}
               </a>
             ))}
-            <button className="mt-auto bg-yellow-500 text-black py-5 rounded-2xl font-black text-xl uppercase">Download App</button>
+            <a href="https://github.com/rickross0/eazyride-super-app/raw/master/EazyRide-Haye-v5.1.0.apk" className="mt-auto bg-yellow-500 text-black py-5 rounded-2xl font-black text-xl uppercase text-center">Download App</a>
           </motion.div>
         )}
       </AnimatePresence>
@@ -129,11 +129,11 @@ const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 mb-16">
-            <button className="flex items-center justify-center gap-4 bg-white text-black px-10 py-5 rounded-[2rem] font-black text-lg hover:bg-yellow-500 transition-all group shadow-2xl">
+            <a href="https://github.com/rickross0/eazyride-super-app/raw/master/EazyRide-Haye-v5.1.0.apk" className="flex items-center justify-center gap-4 bg-white text-black px-10 py-5 rounded-[2rem] font-black text-lg hover:bg-yellow-500 transition-all group shadow-2xl">
               <Download size={24} />
               Install Now
               <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
-            </button>
+            </a>
             <button className="flex items-center justify-center gap-4 bg-zinc-900 border border-white/10 text-white px-10 py-5 rounded-[2rem] font-black text-lg hover:bg-zinc-800 transition-all">
               <Users size={24} />
               Partner with Us
