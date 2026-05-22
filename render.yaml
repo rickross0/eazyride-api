@@ -1,4 +1,16 @@
 services:
+  # ── Frontend Static Site ─────────────────────────────────────────────
+  - type: web
+    name: eazyride-site
+    runtime: static
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+
   # ── API Server ─────────────────────────────────────────────
   - type: web
     name: eazyride-haye-api
@@ -12,7 +24,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000
+        value: "3000"
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
