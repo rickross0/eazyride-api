@@ -3,11 +3,12 @@ const router = express.Router();
 const driverController = require('../controllers/driverController');
 const { authenticate } = require('../middleware/auth');
 const { requireRole, requirePermission } = require('../middleware/roleCheck');
+const upload = require('../middleware/upload');
 
 router.get('/online', driverController.getOnlineDrivers);
 router.use(authenticate);
 router.get('/profile', requireRole('DRIVER'), driverController.getDriverProfile);
-router.put('/profile', requireRole('DRIVER'), driverController.updateDriverProfile);
+router.put('/profile', requireRole('DRIVER'), upload.single('document'), driverController.updateDriverProfile);
 router.put('/location', requireRole('DRIVER'), driverController.updateLocation);
 router.put('/toggle-online', requireRole('DRIVER'), driverController.toggleOnline);
 router.get('/earnings', requireRole('DRIVER'), driverController.getDriverEarnings);

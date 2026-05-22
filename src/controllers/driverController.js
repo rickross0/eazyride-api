@@ -53,10 +53,36 @@ exports.getDriverProfile = async (req, res, next) => {
 
 exports.updateDriverProfile = async (req, res, next) => {
   try {
-    const data = req.body;
+    const body = req.body;
+    const updateData = {};
+
+    if (body.vehicleType !== undefined) updateData.vehicleType = body.vehicleType;
+    if (body.licenseNumber !== undefined) updateData.licenseNumber = body.licenseNumber;
+    if (body.canDeliver !== undefined) updateData.canDeliver = body.canDeliver;
+    if (body.isOnline !== undefined) updateData.isOnline = body.isOnline;
+    if (body.currentLocation !== undefined) updateData.currentLocation = body.currentLocation;
+    if (body.bankName !== undefined) updateData.bankName = body.bankName;
+    if (body.bankAccountNumber !== undefined) updateData.bankAccountNumber = body.bankAccountNumber;
+    if (body.bankAccountName !== undefined) updateData.bankAccountName = body.bankAccountName;
+
+    // Map frontend field names to schema field names
+    if (body.plateNumber !== undefined) updateData.vehiclePlate = body.plateNumber;
+    if (body.vehiclePlate !== undefined) updateData.vehiclePlate = body.vehiclePlate;
+
+    // Handle document upload (vehicle photo, license, etc.)
+    if (req.file) {
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      const docUrl = `${baseUrl}/uploads/${req.file.filename}`;
+      const docType = body.type || 'document';
+      const existing = await prisma.driverProfile.findUnique({ where: { userId: req.user.id }, select: { documents: true } });
+      const docs = existing?.documents || {};
+      docs[docType] = docUrl;
+      updateData.documents = docs;
+    }
+
     const profile = await prisma.driverProfile.update({
       where: { userId: req.user.id },
-      data,
+      data: updateData,
     });
     res.json({ success: true, message: 'Profile updated', data: profile });
   } catch (error) { next(error); }
@@ -149,10 +175,8 @@ exports.getDriverOrders = async (req, res, next) => {
   try {
     const { status, page = 1, limit = 50 } = req.query;
     const { skip, take, page: p, limit: l } = paginate(page, limit);
-    const dp = await prisma.driverProfile.findUnique({ where: { userId: req.user.id } });
-    if (!dp) throw new AppError('Driver profile not found', 404);
-
-    const where = { driverId: dp.id };
+    // Order.driverId references User.id, not DriverProfile.id
+    const where = { driverId: req.user.id };
     if (status) where.status = status;
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
