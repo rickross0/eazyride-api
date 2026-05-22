@@ -8,6 +8,7 @@ const logger = require('../utils/logger');
 // Default fare settings (fallback)
 const DEFAULT_FARES = {
   sedan: { baseFare: 1.5, perKm: 0.5, perMinute: 0.08, minimumFare: 3 },
+  bajaj: { baseFare: 0.8, perKm: 0.3, perMinute: 0.05, minimumFare: 1.5 },
   suv: { baseFare: 2.5, perKm: 0.8, perMinute: 0.1, minimumFare: 5 },
   van: { baseFare: 3, perKm: 1, perMinute: 0.12, minimumFare: 6 },
 };
@@ -18,7 +19,7 @@ const calculateFare = async ({ distance, duration, vehicleType = 'sedan', surgeM
     // Get fare settings from DB or use defaults
     let fareSettings = await prisma.fareSetting.findUnique({ where: { vehicleType } });
     if (!fareSettings) {
-      fareSettings = DEFAULT_FARES[vehicleType] || DEFAULT_FARES.sedan;
+      fareSettings = DEFAULT_FARES[vehicleType.toLowerCase()] || DEFAULT_FARES.sedan;
       fareSettings = { ...fareSettings, surgeMultiplier: 1 };
     }
 

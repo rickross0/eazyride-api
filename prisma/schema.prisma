@@ -333,6 +333,8 @@ model Ride {
 
   commissionAmount  Float      @default(0)
   driverEarnings    Float?
+  vehicleType       String    @default("BAJAJ")
+  paymentMethod     String    @default("EVC_PLUS")
 
   rating            Int?
   ratingComment     String?

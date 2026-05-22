@@ -25,7 +25,7 @@ const flattenRide = (ride) => {
   flat.fare = ride.totalFare || ride.fare || 0;
   flat.total = ride.totalFare || ride.total || 0;
   flat.distance = ride.estimatedDistance || 0;
-  flat.vehicleType = ride.vehicleType || 'sedan';
+  flat.vehicleType = ride.vehicleType || 'BAJAJ';
   return flat;
 };
 
@@ -75,6 +75,8 @@ exports.createRide = async (req, res, next) => {
         dropoffCoordinates: effectiveDropoff,
         estimatedDistance: route.distance,
         estimatedDuration: Math.round(route.duration),
+        vehicleType,
+        paymentMethod,
         baseFare: fare.baseFare,
         distanceFare: fare.distanceFare,
         timeFare: fare.timeFare,
@@ -82,6 +84,7 @@ exports.createRide = async (req, res, next) => {
         totalFare: fare.totalFare,
         discountAmount: fare.discountAmount,
         commissionAmount: fare.commissionAmount,
+        driverEarnings: fare.driverEarnings,
       },
     });
 

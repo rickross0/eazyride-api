@@ -31,8 +31,8 @@ const loginValidation = [
 
 // Ride validation
 const createRideValidation = [
-  body('pickupAddress').notEmpty().withMessage('Pickup address required'),
-  body('dropoffAddress').notEmpty().withMessage('Dropoff address required'),
+  body("pickupAddress").optional().notEmpty().withMessage('Pickup address required'),
+  body("dropoffAddress").optional().notEmpty().withMessage('Dropoff address required'),
   body('pickupCoordinates').isObject().withMessage('Pickup coordinates required'),
   body('dropoffCoordinates').isObject().withMessage('Dropoff coordinates required'),
   validate,
