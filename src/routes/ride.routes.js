@@ -6,7 +6,7 @@ const { requireRole } = require('../middleware/roleCheck');
 const { createRideValidation } = require('../utils/validators');
 
 router.use(authenticate);
-router.post('/', requireRole('RIDER'), createRideValidation, rideController.createRide);
+router.post('/', requireRole('RIDER'), rideController.createRide);
 router.get('/all', requireRole('ADMIN'), rideController.getAllRides);
 router.get('/:id', rideController.getRideById);
 router.post('/:id/accept', requireRole('DRIVER'), rideController.acceptRide);

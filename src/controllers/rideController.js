@@ -32,6 +32,7 @@ const flattenRide = (ride) => {
 exports.createRide = async (req, res, next) => {
   try {
     const riderId = req.user.id;
+    console.log('[createRide] BODY:', JSON.stringify(req.body));
     let {
       pickupAddress, dropoffAddress,
       pickupCoordinates, dropoffCoordinates,
@@ -40,8 +41,9 @@ exports.createRide = async (req, res, next) => {
     } = req.body;
 
     // Support both frontend formats: flat lat/lng OR nested coordinates
-    const pickup = pickupCoordinates || (pickupLat != null && pickupLng != null ? { lat: pickupLat, lng: pickupLng } : null);
-    const dropoff = dropoffCoordinates || (dropoffLat != null && dropoffLng != null ? { lat: dropoffLat, lng: dropoffLng } : null);
+    const pickup = pickupCoordinates || (pickupLat != null && pickupLng != null ? { lat: Number(pickupLat), lng: Number(pickupLng) } : null);
+    const dropoff = dropoffCoordinates || (dropoffLat != null && dropoffLng != null ? { lat: Number(dropoffLat), lng: Number(dropoffLng) } : null);
+    console.log('[createRide] pickup:', pickup, 'dropoff:', dropoff);
 
     if (!pickup) throw new AppError('Pickup location required (pickupLat/pickupLng or pickupCoordinates)', 400);
 
