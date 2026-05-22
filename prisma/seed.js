@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database for v3.0.0...');
 
-  // Super Admin
+  // ── USERS ──
   const adminUser = await prisma.user.upsert({
     where: { phone: '+252615551001' },
     update: {},
@@ -22,7 +22,6 @@ async function main() {
     },
   });
 
-  // Test Rider
   const riderUser = await prisma.user.upsert({
     where: { phone: '+252615550002' },
     update: {},
@@ -35,7 +34,6 @@ async function main() {
     },
   });
 
-  // Test Driver
   const driverUser = await prisma.user.upsert({
     where: { phone: '+252615550003' },
     update: {},
@@ -48,33 +46,63 @@ async function main() {
     },
   });
 
-  // Test Store Owner (with profile)
-  const storeOwnerUser = await prisma.user.upsert({
-    where: { phone: '+252615550004' },
-    update: {},
-    create: {
-      phone: '+252615550004', email: 'store@test.com',
-      password: await bcrypt.hash('test123', 12),
-      firstName: 'Test', lastName: 'StoreOwner', role: 'STORE_OWNER', isActive: true, isVerified: true,
-      storeOwnerProfile: { create: {} },
-      wallet: { create: { balance: 0 } },
-    },
-  });
+  // Store Owners
+  const storeOwnersData = [
+    { phone: '+252615550004', name: 'Hilib Geel', email: 'store1@test.com' },
+    { phone: '+252615550006', name: 'Mogadishu Pizza', email: 'store2@test.com' },
+    { phone: '+252615550007', name: 'Banadir Coffee', email: 'store3@test.com' },
+  ];
+  const storeOwnerUsers = [];
+  for (const so of storeOwnersData) {
+    const u = await prisma.user.upsert({
+      where: { phone: so.phone },
+      update: {},
+      create: {
+        phone: so.phone, email: so.email,
+        password: await bcrypt.hash('test123', 12),
+        firstName: so.name, lastName: 'Owner', role: 'STORE_OWNER', isActive: true, isVerified: true,
+        storeOwnerProfile: { create: {} },
+        wallet: { create: { balance: 0 } },
+      },
+    });
+    storeOwnerUsers.push(u);
+  }
 
-  // Test Provider (with profile)
-  const providerUser = await prisma.user.upsert({
-    where: { phone: '+252615550005' },
-    update: {},
-    create: {
-      phone: '+252615550005', email: 'provider@test.com',
-      password: await bcrypt.hash('test123', 12),
-      firstName: 'Test', lastName: 'Provider', role: 'SERVICE_PROVIDER', isActive: true, isVerified: true,
-      providerProfile: { create: { businessName: 'Haye Cars', category: 'car_rental', phone: '+252615550005', isApproved: true, commissionRate: 5 } },
-      wallet: { create: { balance: 0 } },
-    },
-  });
+  // Service Providers
+  const providersData = [
+    { phone: '+252615550005', name: 'Haye Cars', email: 'provider1@test.com', category: 'car_rental', address: 'Airport Road, Mogadishu' },
+    { phone: '+252615550008', name: 'CleanPro', email: 'provider2@test.com', category: 'cleaning', address: 'Hodan District, Mogadishu' },
+    { phone: '+252615550009', name: 'QuickFix Plumbing', email: 'provider3@test.com', category: 'plumbing', address: 'Waberi District, Mogadishu' },
+    { phone: '+252615550011', name: 'Spark Electric', email: 'provider4@test.com', category: 'electrical', address: 'Hamarweyne, Mogadishu' },
+  ];
+  const providerUsers = [];
+  for (const p of providersData) {
+    const u = await prisma.user.upsert({
+      where: { phone: p.phone },
+      update: {},
+      create: {
+        phone: p.phone, email: p.email,
+        password: await bcrypt.hash('test123', 12),
+        firstName: p.name.split(' ')[0], lastName: p.name.split(' ').slice(1).join(' ') || 'Services',
+        role: 'SERVICE_PROVIDER', isActive: true, isVerified: true,
+        providerProfile: {
+          create: {
+            businessName: p.name,
+            category: p.category,
+            phone: p.phone,
+            address: p.address,
+            isApproved: true,
+            commissionRate: 5,
+            description: `${p.name} — professional ${p.category.replace('_', ' ')} services in Mogadishu.`,
+          }
+        },
+        wallet: { create: { balance: 0 } },
+      },
+    });
+    providerUsers.push(u);
+  }
 
-  // Default Fare Settings
+  // ── FARE SETTINGS ──
   const fareSettings = [
     { vehicleType: 'sedan', baseFare: 1.5, perKmRate: 0.5, perMinuteRate: 0.08, minimumFare: 3, surgeMultiplier: 1 },
     { vehicleType: 'suv', baseFare: 2.5, perKmRate: 0.8, perMinuteRate: 0.1, minimumFare: 5, surgeMultiplier: 1 },
@@ -83,71 +111,116 @@ async function main() {
     { vehicleType: 'CAR', baseFare: 1.5, perKmRate: 0.5, perMinuteRate: 0.08, minimumFare: 3.0, surgeMultiplier: 1 },
   ];
   for (const fs of fareSettings) {
-    await prisma.fareSetting.upsert({
-      where: { vehicleType: fs.vehicleType },
-      update: {},
-      create: fs,
-    });
+    await prisma.fareSetting.upsert({ where: { vehicleType: fs.vehicleType }, update: {}, create: fs });
   }
 
-  // ── STORE: Hilib Geel Restaurant ──
-  const sop = await prisma.storeOwnerProfile.findUnique({ where: { userId: storeOwnerUser.id } });
-  let store = await prisma.store.findFirst({ where: { name: 'Hilib Geel Restaurant' } });
-  if (!store) {
-    store = await prisma.store.create({
-      data: {
-        name: 'Hilib Geel Restaurant',
-        description: 'Best Somali food in town. Authentic flavors, fresh ingredients, and warm hospitality since 2010.',
-        phone: '+252615550010',
-        address: 'Shangani District, Mogadishu, Somalia',
-        coordinates: { lat: 2.0469, lng: 45.3182 },
-        category: 'somali',
-        cuisine: 'Somali',
-        imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
-        coverImageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&q=80',
-        deliveryFee: 1.0, minOrder: 3,
-        openingTime: '07:00', closingTime: '22:00',
-        isOpen: true, isActive: true, rating: 4.5,
-        ownerId: sop?.id || null,
-      },
-    });
-  }
-
-  // Link store back to owner profile
-  if (sop && !sop.storeId) {
-    await prisma.storeOwnerProfile.update({ where: { id: sop.id }, data: { storeId: store.id } });
-  }
-
-  // Store Categories
-  let catMain = await prisma.storeCategory.findFirst({ where: { name: 'Main Dishes', storeId: store.id } });
-  if (!catMain) {
-    catMain = await prisma.storeCategory.create({ data: { name: 'Main Dishes', storeId: store.id, sortOrder: 1 } });
-  }
-  let catSides = await prisma.storeCategory.findFirst({ where: { name: 'Sides & Drinks', storeId: store.id } });
-  if (!catSides) {
-    catSides = await prisma.storeCategory.create({ data: { name: 'Sides & Drinks', storeId: store.id, sortOrder: 2 } });
-  }
-
-  // Menu Items
-  const menuItems = [
-    { name: 'Hilib Geel (Goat Meat)', description: 'Tender goat meat slow-cooked with Somali spices', price: 8.0, categoryId: catMain.id, isPopular: true, isSpicy: true, preparationTime: 20, imageUrl: 'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400&q=80' },
-    { name: 'Bariis Iskukaris', description: 'Fragrant Somali rice with tender meat and vegetables', price: 6.5, categoryId: catMain.id, isPopular: true, preparationTime: 15, imageUrl: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400&q=80' },
-    { name: 'Suqaar (Beef Stir-fry)', description: 'Diced beef with onions, peppers and xawaash', price: 7.0, categoryId: catMain.id, preparationTime: 18, imageUrl: 'https://images.unsplash.com/photo-1543339308-43e59d6b8a22?w=400&q=80' },
-    { name: 'Malawax (Sweet Pancakes)', description: 'Light Somali pancakes served with honey and ghee', price: 3.0, categoryId: catSides.id, preparationTime: 10, imageUrl: 'https://images.unsplash.com/photo-1506084868230-bb9d95c24775?w=400&q=80' },
-    { name: 'Shaah (Somali Tea)', description: 'Traditional spiced black tea with milk and cardamom', price: 1.5, categoryId: catSides.id, preparationTime: 5, imageUrl: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=80' },
-    { name: 'Mango Juice', description: 'Freshly blended sweet mango juice', price: 2.5, categoryId: catSides.id, preparationTime: 3, imageUrl: 'https://images.unsplash.com/photo-1546173159-315724a3166d?w=400&q=80' },
+  // ── STORES ──
+  const storesData = [
+    {
+      name: 'Hilib Geel Restaurant',
+      description: 'Best Somali food in town. Authentic flavors since 2010.',
+      phone: '+252615550010', address: 'Shangani District, Mogadishu, Somalia',
+      coordinates: { lat: 2.0469, lng: 45.3182 }, category: 'somali', cuisine: 'Somali',
+      imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
+      coverImageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&q=80',
+      deliveryFee: 1.0, minOrder: 3, openingTime: '07:00', closingTime: '22:00',
+      rating: 4.5, ownerIndex: 0,
+      categories: ['Main Dishes', 'Sides & Drinks'],
+      items: [
+        { name: 'Hilib Geel (Goat Meat)', desc: 'Tender goat meat slow-cooked with Somali spices', price: 8.0, catIdx: 0, popular: true, spicy: true, time: 20, img: 'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400&q=80' },
+        { name: 'Bariis Iskukaris', desc: 'Fragrant Somali rice with tender meat and vegetables', price: 6.5, catIdx: 0, popular: true, time: 15, img: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400&q=80' },
+        { name: 'Suqaar (Beef Stir-fry)', desc: 'Diced beef with onions, peppers and xawaash', price: 7.0, catIdx: 0, time: 18, img: 'https://images.unsplash.com/photo-1543339308-43e59d6b8a22?w=400&q=80' },
+        { name: 'Malawax (Sweet Pancakes)', desc: 'Light Somali pancakes served with honey and ghee', price: 3.0, catIdx: 1, time: 10, img: 'https://images.unsplash.com/photo-1506084868230-bb9d95c24775?w=400&q=80' },
+        { name: 'Shaah (Somali Tea)', desc: 'Traditional spiced black tea with milk and cardamom', price: 1.5, catIdx: 1, time: 5, img: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=80' },
+        { name: 'Mango Juice', desc: 'Freshly blended sweet mango juice', price: 2.5, catIdx: 1, time: 3, img: 'https://images.unsplash.com/photo-1546173159-315724a3166d?w=400&q=80' },
+      ],
+    },
+    {
+      name: 'Mogadishu Pizza House',
+      description: 'Fresh oven-baked pizzas, pasta and Italian classics delivered hot.',
+      phone: '+252615550012', address: 'Hodan District, Mogadishu, Somalia',
+      coordinates: { lat: 2.0420, lng: 45.3250 }, category: 'pizza', cuisine: 'Italian',
+      imageUrl: 'https://images.unsplash.com/photo-1604382354936-07c5d8d53fe9?w=800&q=80',
+      coverImageUrl: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1200&q=80',
+      deliveryFee: 1.5, minOrder: 5, openingTime: '10:00', closingTime: '23:00',
+      rating: 4.3, ownerIndex: 1,
+      categories: ['Pizzas', 'Sides'],
+      items: [
+        { name: 'Margherita Pizza', desc: 'Classic tomato sauce, mozzarella and fresh basil', price: 7.0, catIdx: 0, popular: true, time: 20, img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d641?w=400&q=80' },
+        { name: 'Pepperoni Pizza', desc: 'Tomato sauce, mozzarella and spicy pepperoni', price: 9.0, catIdx: 0, popular: true, time: 22, img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=80' },
+        { name: 'Chicken Alfredo Pasta', desc: 'Creamy alfredo sauce with grilled chicken', price: 8.5, catIdx: 0, time: 18, img: 'https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=400&q=80' },
+        { name: 'Garlic Bread', desc: 'Toasted bread with garlic butter and herbs', price: 2.5, catIdx: 1, time: 8, img: 'https://images.unsplash.com/photo-1573140247632-f900f087b0d0?w=400&q=80' },
+        { name: 'Coca-Cola 1.5L', desc: 'Chilled Coca-Cola bottle', price: 2.0, catIdx: 1, time: 1, img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400&q=80' },
+      ],
+    },
+    {
+      name: 'Banadir Coffee Corner',
+      description: 'Premium coffee, pastries and light bites in a cozy atmosphere.',
+      phone: '+252615550013', address: 'Makka Al Mukarama, Mogadishu, Somalia',
+      coordinates: { lat: 2.0380, lng: 45.3100 }, category: 'cafe', cuisine: 'Cafe',
+      imageUrl: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80',
+      coverImageUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1200&q=80',
+      deliveryFee: 0.8, minOrder: 2, openingTime: '06:00', closingTime: '20:00',
+      rating: 4.7, ownerIndex: 2,
+      categories: ['Coffee', 'Pastries'],
+      items: [
+        { name: 'Cappuccino', desc: 'Rich espresso with steamed milk and foam', price: 2.0, catIdx: 0, popular: true, time: 5, img: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&q=80' },
+        { name: 'Espresso', desc: 'Strong single-shot espresso', price: 1.5, catIdx: 0, time: 3, img: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=400&q=80' },
+        { name: 'Croissant', desc: 'Buttery flaky French croissant', price: 2.0, catIdx: 1, time: 2, img: 'https://images.unsplash.com/photo-1555507036-ab1f6cd8c4d8?w=400&q=80' },
+        { name: 'Chocolate Muffin', desc: 'Rich chocolate chip muffin', price: 2.5, catIdx: 1, popular: true, time: 2, img: 'https://images.unsplash.com/photo-1607958996333-41aef7caefaa?w=400&q=80' },
+        { name: 'Fresh Orange Juice', desc: 'Freshly squeezed orange juice', price: 2.0, catIdx: 0, time: 3, img: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=400&q=80' },
+      ],
+    },
   ];
-  for (const mi of menuItems) {
-    await prisma.menuItem.upsert({
-      where: { id: `menu-${mi.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}` },
-      update: {},
-      create: { ...mi, storeId: store.id, isAvailable: true },
-    });
+
+  for (const sd of storesData) {
+    const sop = await prisma.storeOwnerProfile.findUnique({ where: { userId: storeOwnerUsers[sd.ownerIndex].id } });
+    let store = await prisma.store.findFirst({ where: { name: sd.name } });
+    if (!store) {
+      store = await prisma.store.create({
+        data: {
+          name: sd.name, description: sd.description,
+          phone: sd.phone, address: sd.address,
+          coordinates: sd.coordinates, category: sd.category, cuisine: sd.cuisine,
+          imageUrl: sd.imageUrl, coverImageUrl: sd.coverImageUrl,
+          deliveryFee: sd.deliveryFee, minOrder: sd.minOrder,
+          openingTime: sd.openingTime, closingTime: sd.closingTime,
+          isOpen: true, isActive: true, rating: sd.rating,
+          ownerId: sop?.id || null,
+        },
+      });
+    }
+    if (sop && !sop.storeId) {
+      await prisma.storeOwnerProfile.update({ where: { id: sop.id }, data: { storeId: store.id } });
+    }
+
+    const cats = [];
+    for (let i = 0; i < sd.categories.length; i++) {
+      let cat = await prisma.storeCategory.findFirst({ where: { name: sd.categories[i], storeId: store.id } });
+      if (!cat) {
+        cat = await prisma.storeCategory.create({ data: { name: sd.categories[i], storeId: store.id, sortOrder: i + 1 } });
+      }
+      cats.push(cat);
+    }
+
+    for (const mi of sd.items) {
+      await prisma.menuItem.create({
+        data: {
+          name: mi.name, description: mi.desc, price: mi.price,
+          categoryId: cats[mi.catIdx]?.id || null,
+          storeId: store.id,
+          isAvailable: true, isPopular: mi.popular || false, isSpicy: mi.spicy || false,
+          preparationTime: mi.time, imageUrl: mi.img,
+        },
+      }).catch(() => {});
+    }
   }
 
-  // ── CAR RENTAL: Sample Cars ──
-  const pp = await prisma.providerProfile.findUnique({ where: { userId: providerUser.id } });
-  if (pp) {
+  // ── CARS ──
+  const carProviders = providerUsers.filter((_, i) => providersData[i].category === 'car_rental');
+  for (const pp of carProviders) {
+    const ppRec = await prisma.providerProfile.findUnique({ where: { userId: pp.id } });
+    if (!ppRec) continue;
     const cars = [
       {
         make: 'Toyota', model: 'Corolla', year: 2023, color: 'White',
@@ -156,6 +229,7 @@ async function main() {
         seats: 5, fuelType: 'petrol', transmission: 'automatic',
         description: 'Comfortable sedan for city rides',
         features: JSON.stringify(['AC', 'Bluetooth', 'GPS', 'USB Charging']),
+        imageUrl: 'https://images.unsplash.com/photo-1621007947382-bb3c3998e34c?w=800&q=80',
       },
       {
         make: 'Toyota', model: 'Hilux', year: 2022, color: 'Silver',
@@ -164,6 +238,7 @@ async function main() {
         seats: 5, fuelType: 'diesel', transmission: 'manual',
         description: 'Rugged pickup for off-road and cargo',
         features: JSON.stringify(['4x4', 'AC', 'Tow Hitch', 'Roof Rack']),
+        imageUrl: 'https://images.unsplash.com/photo-1550564950-6f0e7e5c8c3b?w=800&q=80',
       },
       {
         make: 'Nissan', model: 'Sunny', year: 2021, color: 'Black',
@@ -172,18 +247,37 @@ async function main() {
         seats: 4, fuelType: 'petrol', transmission: 'automatic',
         description: 'Budget-friendly sedan for daily use',
         features: JSON.stringify(['AC', 'Radio', 'Power Windows']),
+        imageUrl: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db0?w=800&q=80',
+      },
+      {
+        make: 'Hyundai', model: 'Tucson', year: 2024, color: 'Grey',
+        plateNumber: 'MOG-T404', vehicleType: 'suv',
+        pricePerHour: 6, pricePerDay: 50,
+        seats: 5, fuelType: 'petrol', transmission: 'automatic',
+        description: 'Modern SUV with panoramic roof and leather seats',
+        features: JSON.stringify(['Panoramic Roof', 'Leather Seats', 'GPS', 'Reverse Camera', 'AC']),
+        imageUrl: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&q=80',
+      },
+      {
+        make: 'Mercedes', model: 'Vito', year: 2023, color: 'Black',
+        plateNumber: 'MOG-V505', vehicleType: 'van',
+        pricePerHour: 8, pricePerDay: 70,
+        seats: 8, fuelType: 'diesel', transmission: 'automatic',
+        description: 'Luxury van for group travel and airport transfers',
+        features: JSON.stringify(['Leather Seats', 'AC', 'USB Charging', 'Tinted Windows', 'Mini Fridge']),
+        imageUrl: 'https://images.unsplash.com/photo-1566008885218-90abf9200ddb?w=800&q=80',
       },
     ];
     for (const c of cars) {
       await prisma.car.upsert({
         where: { plateNumber: c.plateNumber },
         update: {},
-        create: { ...c, providerId: pp.id, isAvailable: true, isVerified: true },
-      });
+        create: { ...c, providerId: ppRec.id, isAvailable: true, isVerified: true },
+      }).catch(() => {});
     }
   }
 
-  // Support Contacts
+  // ── SUPPORT CONTACTS ──
   const contacts = [
     { type: 'PHONE', label: 'Customer Care', value: '+252615551000', isActive: true },
     { type: 'WHATSAPP', label: 'WhatsApp Support', value: '+252615551000', isActive: true },
@@ -193,20 +287,17 @@ async function main() {
     await prisma.supportContact.create({ data: c }).catch(() => {});
   }
 
-  // Legal Documents
+  // ── LEGAL DOCUMENTS ──
   await prisma.legalDocument.upsert({
-    where: { type: 'TERMS' },
-    update: { version: '3.0.0' },
+    where: { type: 'TERMS' }, update: { version: '3.0.0' },
     create: { type: 'TERMS', content: 'EazyRide + Haye! Terms and Conditions v3.0.0', version: '3.0.0' },
   });
   await prisma.legalDocument.upsert({
-    where: { type: 'PRIVACY' },
-    update: { version: '3.0.0' },
+    where: { type: 'PRIVACY' }, update: { version: '3.0.0' },
     create: { type: 'PRIVACY', content: 'EazyRide + Haye! Privacy Policy v3.0.0', version: '3.0.0' },
   });
   await prisma.legalDocument.upsert({
-    where: { type: 'ABOUT' },
-    update: { version: '3.0.0' },
+    where: { type: 'ABOUT' }, update: { version: '3.0.0' },
     create: { type: 'ABOUT', content: 'EazyRide + Haye! — The Premium Super-App for Somalia. "Fast & Safe" • "The Answer For All"', version: '3.0.0' },
   });
 
@@ -214,10 +305,9 @@ async function main() {
   console.log(`  Admin:    admin@eazyride.com / admin123`);
   console.log(`  Rider:    customer@test.com / test123`);
   console.log(`  Driver:   driver@test.com / test123`);
-  console.log(`  Store:    store@test.com / test123`);
-  console.log(`  Provider: provider@test.com / test123`);
-  console.log(`  Store:    Hilib Geel Restaurant (6 menu items)`);
-  console.log(`  Cars:     3 rental cars available`);
+  console.log(`  Stores:   ${storesData.length} restaurants with menu items`);
+  console.log(`  Cars:     5 rental cars`);
+  console.log(`  Providers: ${providersData.length} service providers`);
 }
 
 main()
