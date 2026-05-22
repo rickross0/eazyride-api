@@ -189,6 +189,18 @@ async function main() {
           ownerId: sop?.id || null,
         },
       });
+    } else {
+      // Update existing store with images and other fields
+      store = await prisma.store.update({
+        where: { id: store.id },
+        data: {
+          description: sd.description,
+          imageUrl: sd.imageUrl, coverImageUrl: sd.coverImageUrl,
+          deliveryFee: sd.deliveryFee, minOrder: sd.minOrder,
+          openingTime: sd.openingTime, closingTime: sd.closingTime,
+          cuisine: sd.cuisine,
+        },
+      });
     }
     if (sop && !sop.storeId) {
       await prisma.storeOwnerProfile.update({ where: { id: sop.id }, data: { storeId: store.id } });
