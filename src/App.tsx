@@ -759,6 +759,35 @@ export default function App() {
 
       <VoiceNarrator lang={lang} />
       <ThemeToggle />
+      <motion.div 
+        className="fixed right-4 bottom-24 z-50 flex flex-col gap-2"
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 1 }}
+      >
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => handleLangSwitch('en')}
+          className={`w-12 h-12 rounded-full font-bold text-sm flex items-center justify-center cursor-pointer ${lang === 'en' ? 'bg-gold text-navy-900 glow-pulse' : 'bg-navy-700/80 text-white hover:bg-navy-500 border border-white/20'}`}
+          title="English"
+        >EN</motion.button>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => handleLangSwitch('so')}
+          className={`w-12 h-12 rounded-full font-bold text-sm flex items-center justify-center cursor-pointer ${lang === 'so' ? 'bg-gold text-navy-900 glow-pulse' : 'bg-navy-700/80 text-white hover:bg-navy-500 border border-white/20'}`}
+          title="Soomaali"
+        >SO</motion.button>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => handleLangSwitch('ar')}
+          className={`w-12 h-12 rounded-full font-bold text-sm flex items-center justify-center cursor-pointer ${lang === 'ar' ? 'bg-gold text-navy-900 glow-pulse' : 'bg-navy-700/80 text-white hover:bg-navy-500 border border-white/20'}`}
+          title="العربية"
+        >ع</motion.button>
+      </motion.div>
+
       <Badges scrollProgress={scrollProgress} />
       <AIChatbot lang={lang} />
 
