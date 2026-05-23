@@ -594,14 +594,13 @@ function Services() {
 /* ─── Benefits ─── */
 function Benefits() {
   const { t } = useTranslation();
-  const roles = ['rider', 'driver', 'store', 'provider'];
+  const roles = ['customer', 'merchant', 'driver'];
   const [ref, inView] = useInView({ threshold: 0.1, triggerOnce: true });
 
   const tableRows = [
-    { app: t('benefits.table.riderApp'), who: t('benefits.table.riderWho'), benefit: t('benefits.table.riderBenefit') },
+    { app: t('benefits.table.customerApp'), who: t('benefits.table.customerWho'), benefit: t('benefits.table.customerBenefit') },
     { app: t('benefits.table.driverApp'), who: t('benefits.table.driverWho'), benefit: t('benefits.table.driverBenefit') },
-    { app: t('benefits.table.storeApp'), who: t('benefits.table.storeWho'), benefit: t('benefits.table.storeBenefit') },
-    { app: t('benefits.table.providerApp'), who: t('benefits.table.providerWho'), benefit: t('benefits.table.providerBenefit') }
+    { app: t('benefits.table.merchantApp'), who: t('benefits.table.merchantWho'), benefit: t('benefits.table.merchantBenefit') },
   ];
 
   return (

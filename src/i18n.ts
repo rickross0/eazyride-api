@@ -5,21 +5,47 @@ const resources = {
   en: {
     translation: {
       heroTitle: 'EazyRide + Haye!',
-      heroSub: 'Fast & Safe Rides • Delicious Food • Reliable Cars',
-      ctaRide: 'Request Ride',
-      ctaFood: 'Order Food',
-      ctaCars: 'Rent Car',
+      heroSub: 'Super App - Everything You Need',
+      ctaRide: 'Get Started',
+      ctaFood: 'Explore',
+      ctaCars: 'Join Us',
       services: {
-        title: 'Our Services',
-        eazyride: 'EazyRide: Rides & Food Delivery',
-        haye: 'Haye! Services',
-        desc1: 'Real-time Bajaj rides in Laascaanood.',
-        desc2: 'Fresh meals delivered fast.',
-        desc3: 'Rent a car · Request water · Request handyman · Post your service free',
+        title: 'One App, Three Ways to Use',
+        customer: 'Customer',
+        customerDesc: 'Shop, ride, and deliver - all in one place',
+        merchant: 'Store / Merchant',
+        merchantDesc: 'Grow your business with thousands of customers',
+        driver: 'Driver / Rider',
+        driverDesc: 'Earn money with rides and deliveries',
+        customerFeatures: [
+          'Browse restaurants, groceries, pharmacies',
+          'Add items to cart, checkout with currency',
+          'Request rides or deliveries',
+          'Purchase credits via mobile money',
+          'Optional subscription for perks',
+          'Referral credits'
+        ],
+        merchantFeatures: [
+          'Upload products, set prices in currency',
+          'Manage inventory, receive orders',
+          'Earn currency from sales',
+          'Pay platform commissions',
+          'Optional subscription for lower rates',
+          'Merchant onboarding support'
+        ],
+        driverFeatures: [
+          'Maintain account balance in credits',
+          'Purchase credits via mobile money',
+          'Accept ride/delivery requests',
+          'Earn currency from completed services',
+          '10% commission per transaction',
+          'Optional subscription for lower commissions',
+          'Driver recruitment bonuses'
+        ]
       },
       downloads: {
         title: 'Download Now (Android)',
-        rider: 'Rider App',
+        rider: 'EazyRide Super App',
         driver: 'Driver App',
         store: 'Store Owner',
         provider: 'Provider App'
@@ -50,231 +76,273 @@ const resources = {
         admin: 'Admin Agreement',
         forcemajeure: 'Force Majeure',
         aup: 'Acceptable Use',
-        copyright: '© 2026 BinMahfuud LTD. All rights reserved.',
-        operated: 'EazyRide + Haye! is operated by BinMahfuud LTD.',
+        copyright: '© 2026 Haye! Mobility Global Inc. All rights reserved.',
+        operated: 'EazyRide + Haye! is operated by Haye! Mobility Global Inc.',
         madeIn: 'Made in Somalia 🇸🇴'
       },
       benefits: {
-        title: 'Who Benefits and How',
-        rider: {
-          who: 'Rider App — The Customer',
-          for: 'Everyday people in Laascaanood who need transport, food, or a car.',
+        title: 'Choose Your Path',
+        customer: {
+          who: 'Customer',
+          for: 'Everyone who needs rides, food, groceries, or deliveries.',
           benefits: [
-            'Rides — Bajaj pickup in minutes, real-time GPS tracking, fair pricing',
-            'Food delivery — Order from local restaurants with delivery tracking',
-            'Car rental — Hourly/daily cars with escrow protection',
-            'Lottery — Enter prize draws while using the app',
-            'SOS alerts — One-tap emergency alert with location',
-            'Chat — Directly message driver during ride',
-            'EVC/Zaad payments — Pay with Somali mobile money',
-            'Real-time tracking — Watch driver approach on map live'
+            'Browse curated verticals (restaurants, groceries, pharmacies)',
+            'Add items to cart, checkout with in-app currency',
+            'Request rides or deliveries',
+            'Purchase credits via mobile money (admin verified)',
+            'Optional subscription for perks',
+            'Referral credits',
+            'Secure EVC/Zaad payments'
+          ]
+        },
+        merchant: {
+          who: 'Store / Merchant',
+          for: 'Restaurants, shops, and businesses wanting to reach more customers.',
+          benefits: [
+            'Upload product images, set prices in currency',
+            'Manage inventory, receive orders',
+            'Earn currency credits from sales',
+            'Pay platform commissions',
+            'Optional subscription for lower rates + features',
+            'Merchant onboarding support',
+            'Localized marketing per market'
           ]
         },
         driver: {
-          who: 'Driver App — The Earner',
-          for: 'Drivers with Bajajs, motorcycles, or cars who want to earn.',
+          who: 'Driver / Rider',
+          for: 'Drivers with vehicles who want to earn income.',
           benefits: [
-            'Dual earnings — Accept ride requests AND food delivery orders',
-            'Real-time location — Gets shown to riders so pickups are smooth',
-            'Chat — Coordinate with riders without phone calls',
-            'Commission system — Transparent split of fare, automatic payouts',
-            'Driver dashboard — Track ratings, total rides, earnings history',
-            'Online toggle — Go online/offline when you want'
-          ]
-        },
-        store: {
-          who: 'Store Owner App — The Restaurateur',
-          for: 'Restaurant and shop owners who want to reach more customers.',
-          benefits: [
-            'Order management — Accept and manage delivery orders in real-time',
-            'Menu dashboard — Update items, prices, and availability instantly',
-            'Revenue tracking — See daily/weekly earnings and analytics',
-            'Customer reach — Get discovered by thousands of nearby riders',
-            'Promotions — Run deals and discounts to boost sales'
-          ]
-        },
-        provider: {
-          who: 'Provider App — The Fleet Manager',
-          for: 'Car rental providers who manage fleets and want transparent operations.',
-          benefits: [
-            'Fleet management — Add, track, and manage all your vehicles',
-            'Escrow system — Secure deposits and payments with full transparency',
-            'Booking dashboard — See all rental requests, active rentals, returns',
-            'Revenue reports — Detailed breakdowns of income per vehicle',
-            'Driver verification — Vett and approve drivers before rental'
+            'Maintain account balance (currency credits)',
+            'Purchase credits via mobile money (admin verified)',
+            'Use credits for commissions, expenses, withdrawals',
+            'Accept ride/delivery requests',
+            'Earn currency from completed services',
+            '10% commission per transaction',
+            'Optional subscription for lower commissions + perks',
+            'Driver recruitment bonuses'
           ]
         },
         table: {
-          app: 'App',
+          app: 'App Type',
           who: 'Who',
           mainBenefit: 'Main Benefit',
-          riderApp: 'Rider',
-          riderWho: 'Customer',
-          riderBenefit: 'Everything on-demand, safe & local',
+          customerApp: 'Customer',
+          customerWho: 'Shop & Ride',
+          customerBenefit: 'Everything on-demand',
+          merchantApp: 'Merchant',
+          merchantWho: 'Sell Online',
+          merchantBenefit: 'Reach thousands of customers',
           driverApp: 'Driver',
-          driverWho: 'Earner',
-          driverBenefit: 'Dual income from rides & deliveries',
-          storeApp: 'Store',
-          storeWho: 'Restaurateur',
-          storeBenefit: 'Reach thousands of new customers',
-          providerApp: 'Provider',
-          providerWho: 'Fleet Manager',
-          providerBenefit: 'Transparent fleet & escrow management'
+          driverWho: 'Earn Income',
+          driverBenefit: 'Flexible earnings'
         }
+      },
+      howItWorks: {
+        title: 'How It Works',
+        step1: 'Download App',
+        step1Desc: 'Get the EazyRide Super App from our website',
+        step2: 'Choose Your Role',
+        step2Desc: 'Sign up as Customer, Merchant, or Driver',
+        step3: 'Start Using',
+        step3Desc: 'Shop, sell, or earn based on your role'
       }
     }
   },
   so: {
     translation: {
       heroTitle: 'EazyRide + Haye!',
-      heroSub: 'Raac Degdeg ah & Ammaan ah • Cunto Dhadhamin leh • Gaadiid La Aamini karo',
-      ctaRide: 'Raac Dalbo',
-      ctaFood: 'Cunto Dalbo',
-      ctaCars: 'Gaadiid Kireys Ash',
+      heroSub: 'Super App - Walashaa Aad U Baahan tahay',
+      ctaRide: 'Bilow',
+      ctaFood: 'Saxeex',
+      ctaCars: 'Qasb Qaado',
       services: {
-        title: 'Adeegyadayada',
-        eazyride: 'EazyRide: Raacyada & Gaadiidka Cunnada',
-        haye: 'Haye! Adeegyada',
-        desc1: 'Raac Bajaj ee Laascaanood ee wakhtiga dhabta ah.',
-        desc2: 'Cunto cusub oo degdeg loo keenayo.',
-        desc3: 'Kiree gaari · Dalbi biyo · Dalbi farsamo · Ku daar adeeggaaga bilaash',
+        title: 'App keliya, Saddex Shaqo',
+        customer: 'Macmiil',
+        customerDesc: 'Iibso, wado, ama soo/guri - dhamaan hal meel',
+        merchant: 'Dukaaneer / Store',
+        merchantDesc: 'Korporusha ganacsigaagaarka adan milic badan',
+        driver: 'Darawalka / Rider',
+        driverDesc: 'Soo haayso lacagtaada adiga oo wado ama soo-guri',
+        customerFeatures: [
+          'Raadi malays, yaabaha, pharmacy-ga',
+          'Ku dar dukumoobiyaha, iibso adiga oo isticmaalaya lacag',
+          'Wado ama soo-guri dalbasho',
+          'Ishiiska mobile money ee admin ka xaqiijiyay',
+          'Xisaabinta ikhtiyaariga ah ee faaiido'
+        ],
+        merchantFeatures: [
+          'Soo geli sawirrada, qiimaha dhig',
+          'Maaree inventory-ga, geli dalbasho',
+          'Hesho lacag ka ganacsatada',
+          'Bixiicommission-ga platform-ka',
+          'Xisaabinta ikhtiyaariga ah ee qiimo-yare'
+        ],
+        driverFeatures: [
+          'Hay account balance-kaaga',
+          'Ishiiska mobile money ee admin ka xaqiijiyay',
+          'Aqbal dalbashooyinka wado/soo-guri',
+          'Hesho lacag ka shaqo-dhamaystiran',
+          '10% commission-ga shaqo kasta',
+          'Xisaabinta ikhtiyaariga ah ee commission-yare'
+        ]
       },
       downloads: {
-        title: 'Hadda Soo Degso (Android)',
-        rider: 'App Rider',
-        driver: 'App Driver',
-        store: 'Mulkiilaha Dukaan',
-        provider: 'Bixiyaha Adeeg'
+        title: 'Hadda Degso (Android)',
+        rider: 'EazyRide Super App',
+        driver: 'Appka Darawalka',
+        store: 'Appka Dukaaneerka',
+        provider: 'Appka Provider-ka'
       },
       terms: {
-        agree: 'Waan ogolahay',
-        link: "Shuruudaha & Qaa'dada",
-        mustAgree: 'Fadlan ogow shuruudaha ka hor soo dejinta.'
+        agree: 'Waxaan ansaxday',
+        link: 'Shuruudaha & Xeerarka',
+        mustAgree: 'Fadlan ansax Shuruudaha ka hor intaadan soo degsan.'
       },
       switchEn: 'English',
       switchSo: 'Soomaali',
-      switchAr: 'Carabi',
+      switchAr: 'العربية',
       footer: {
         legal: 'Sharciga',
-        terms: "Shuruudaha & Qaa'dada",
-        privacy: 'Astaanka Qarsoodiga',
-        rider: 'Heshiiska Ridaaga',
+        terms: 'Shuruudaha & Xeerarka',
+        privacy: 'Qorshaha Arrimaha',
+        rider: ' Heshiiska Ridaaga',
         driver: 'Heshiiska Darawalka',
-        restaurant: 'Heshiiska Maqaayadda',
-        carrental: 'Shuruudda Kirada',
-        community: 'Hagaagga Bulshada',
-        refund: 'Siyaasadda Lacag-celinta',
+        restaurant: 'Heshiiska Restaurant-ka',
+        carrental: 'Shuruudaha Rentalka',
+        community: 'Qaacidada Bulshada',
+        refund: 'Qorshaha Lacag celinta',
         aml: 'AML & KYC',
-        databreach: 'Siyaasadda Xadgudubka Xogta',
+        databreach: 'Qorshaha Jabiska Xogta',
         eula: 'EULA',
-        dpa: 'Habaynta Xogta',
-        dispute: 'Xalka Muranka',
-        admin: 'Heshiiska Mamnuc',
-        forcemajeure: 'Hawl-qaladka',
-        aup: 'Isticmaalka Lagu Ogol yahay',
-        copyright: '© 2026 BinMahfuud LTD. Dhammaan xaquuqda waa la ilaalay.',
-        operated: 'EazyRide + Haye! waxaa shaqeynaysa BinMahfuud LTD.',
-        madeIn: 'Laga sameeyay Soomaaliya 🇸🇴'
+        dpa: 'Maareynta Xogta',
+        dispute: 'Xalka Khilaafka',
+        admin: 'Heshiiska Admin-ka',
+        forcemajeure: 'Force Majeure',
+        aup: 'Isticmaalka Ansaxan',
+        copyright: '© 2026 Haye! Mobility Global Inc. Dhamaan xuquuqda waafaqsan.',
+        operated: 'EazyRide + Haye! waa haye! Mobility Global Inc.',
+        madeIn: 'Sameysay Somalia 🇸🇴'
       },
       benefits: {
-        title: "Yaa Ka Faa'iidooda iyo Sida",
-        rider: {
-          who: 'App Rider — Macaamilka',
-          for: 'Dadka maalinlaha ah ee Laascaanood ee u baahan gaadiid, cunto, ama gaari.',
+        title: 'Dooro Jidadkaaga',
+        customer: {
+          who: 'Macmiil',
+          for: 'Qof kasta oo u baahan wado, cunto,ader, ama soo-guri.',
           benefits: [
-            'Raacyada — Bajaj lagu soo qaato daqiiqado gudahood, raad-raaca GPS, qiime cadaalad ah',
-            'Gaadiidka Cunnada — Ka dalbo maqaayadaha maxalliga ah raad-raaca gaadiidka',
-            'Kirada gaadiidka — Saac/galab gaari oo escrow ilaashado',
-            'Labaad — Ka qaadso tartan halka aad app-ka isticmaalayso',
-            'SOS — Hal taabo degdeg raad-raaca goobta',
-            'Wada sheekasho — La wada sheeko darawalka safarka',
-            'EVC/Zaad — Lacag bixi telefoon Soomaali',
-            'Raad-raac wakhtiga dhabta — Daawo darawalka khariidada'
+            'Raadi dukaamada (restaurants, groceries, pharmacies)',
+            'Ku dar dukumoobiyaha, iibso adiga oo isticmaalaya lacag',
+            'Wado ama soo-guri dalbasho',
+            'Ishiiska mobile money (admin xaqiijiyay)',
+            'Xisaabinta ikhtiyaariga ah',
+            'Referral credits',
+            'Payments-ka amtiga EVC/Zaad'
+          ]
+        },
+        merchant: {
+          who: 'Dukaaneer / Store',
+          for: 'Restaurants, dukaamada, iyo ganacsiyada ee doonaya in ay gaadhaan macmiileen badan.',
+          benefits: [
+            'Soo geli sawirrada, qiimaha dhig',
+            'Maaree inventory-ga, geli dalbasho',
+            'Hesho credits-ka lacagta ka ganacsatada',
+            'Bixiicommission-ga platform-ka',
+            'Xisaabinta ikhtiyaariga ah + features',
+            'Taageerada merchant onboarding',
+            'Marketing-ga xeroboka ah'
           ]
         },
         driver: {
-          who: 'App Driver — Lacag-bixi',
-          for: 'Darawal Bajaj, baaskil, ama gaari ee raba inay lacag bixdaan.',
+          who: 'Darawalka / Rider',
+          for: 'Darawallada gaadiidka ee doonaya in ay soo haaystaan lacag.',
           benefits: [
-            'Laba dakhli — Raac iyo cunto labadaba',
-            'Goobta wakhtiga dhabta — Ridaagu arkaa si ay u soo qaataan',
-            'Wada sheekasho — La sheeko ridaaga telefoon la\'aan',
-            'Komishan — Qaybsasho cadd, lacag-bixi otomaatiko',
-            'Dashboard — Tirsi, safarro, dakhli',
-            'Online toggle — Online/offline markaad rabto'
-          ]
-        },
-        store: {
-          who: 'App Mulkiilaha Dukaan — Maqaayad',
-          for: 'Maqaayad iyo dukaan mulkiilayaal ee raba macaamil badan.',
-          benefits: [
-            'Maareyn dalbasho — Aqbi iyo maareyn wakhtiga dhabta',
-            'Menu dashboard — Cunto, qiime, helitaan degdeg',
-            'Dakhli — Maalinlaha/todobaadkiiga iyo analytics',
-            'Macaamil — Kunan ridaag kuu soo dhow',
-            'Dallac — Qiime yaraan iigo kordhi'
-          ]
-        },
-        provider: {
-          who: 'App Bixiyaha — Flit Manager',
-          for: 'Bixiyayaasha kirada gaadiidka ee raba hawlo cadaalad.',
-          benefits: [
-            'Flit maareyn — Ku dar, raad, iyo maaree dhammaan gaadiidka',
-            'Escrow — Deposit iyo lacag-bixin amaan',
-            'Booking dashboard — Dalbasho, kirada firfircoon, celin',
-            'Dakhli qor — Faahfaahin gaari gaari',
-            'Darawal xaqiijin — Xaqiiji ka hor kirada'
+            'Hay account balance-kaaga credits-ka',
+            'Ishiiska mobile money (admin xaqiijiyay)',
+            'Isticmaal credits-ka commission-ga, kharashka, withdraws',
+            'Aqbal dalbashooyinka wado/soo-guri',
+            'Hesho lacag ka shaqo-dhamaystiran',
+            '10% commission-ga shaqo kasta',
+            'Xisaabinta ikhtiyaariga ah + faaiido',
+            'Bonus-yasha recruitment-ka'
           ]
         },
         table: {
-          app: 'App',
-          who: 'Yaa',
-          mainBenefit: "Faa'iidada Guud",
-          riderApp: 'Rider',
-          riderWho: 'Macaamil',
-          riderBenefit: 'Dhammaan dalbo, ammaan & maxalli',
-          driverApp: 'Driver',
-          driverWho: 'Lacag-bixi',
-          driverBenefit: 'Laba dakhli safar & gaadiid',
-          storeApp: 'Dukaan',
-          storeWho: 'Maqaayad',
-          storeBenefit: 'Kunan macaamil cusub',
-          providerApp: 'Bixiyaha',
-          providerWho: 'Flit Manager',
-          providerBenefit: 'Maareyn flit & escrow cad'
+          app: 'Nooca App-ka',
+          who: 'Yee',
+          mainBenefit: 'Faaiido Guud',
+          customerApp: 'Macmiil',
+          customerWho: 'Iibso & Wado',
+          customerBenefit: 'Wax kasta marka aad u baahan tahay',
+          merchantApp: 'Merchant',
+          merchantWho: 'Iibso Online',
+          merchantBenefit: 'Gaar macmiileen Badan',
+          driverApp: 'Darawalka',
+          driverWho: 'Soo Haayso',
+          driverBenefit: 'Heshiyayaasha'
         }
+      },
+      howItWorks: {
+        title: 'Sidee Ay U Shaqeysaa',
+        step1: 'Soo Deg App-ka',
+        step1Desc: 'EazyRide Super App ka soo degso website-ka',
+        step2: 'DooroShaqadaada',
+        step2Desc: 'Iska diiwaangeli Macmiil, Merchant, ama Driver',
+        step3: 'Bilow Isticmaalka',
+        step3Desc: 'Iibso, iibsi, ama soo haayso ee ku salaysan shaqadaada'
       }
     }
   },
   ar: {
     translation: {
-      heroTitle: 'إيزي رايد + هاي!',
-      heroSub: 'رحلات سريعة وآمنة • طعام لذيذ • سيارات موثوقة',
-      ctaRide: 'طلب رحلة',
-      ctaFood: 'طلب طعام',
-      ctaCars: 'استئجار سيارة',
+      heroTitle: 'إيزي رايد + هي!',
+      heroSub: 'تطبيق الكل في واحد - كل ما تحتاجه',
+      ctaRide: 'ابدأ',
+      ctaFood: 'استكشف',
+      ctaCars: 'انضم',
       services: {
-        title: 'خدماتنا',
-        eazyride: 'إيزي رايد: رحلات وتوصيل طعام',
-        haye: 'هاي! خدمات',
-        desc1: 'رحلات باچاج فورية في لاسعانود.',
-        desc2: 'وجبات طازجة سريعة التوصيل.',
-        desc3: 'استأجر سيارة · اطلب ماء · اطلب حرفي · أعلن عن خدمتك مجانا',
+        title: 'تطبيق واحد ثلاثة أوضاع',
+        customer: 'عميل',
+        customerDesc: 'تسوق، اركب، وشغّل - كل شيء في مكان واحد',
+        merchant: 'تاجر / متجر',
+        merchantDesc: 'نمّ أعمالك مع آلاف العملاء',
+        driver: 'سائق / رايدر',
+        driverDesc: 'اربح المال من الركوب والتوصيل',
+        customerFeatures: [
+          'تصفح المطاعم والمواد الغذائية والصيدليات',
+          'أضف للسلة والدفع بالعملة المحلية',
+          'اطلب ركوب أو توصيل',
+          'شراء الرصيد عبر المحفظة الإلكترونية',
+          'اشتراك اختياري للمزايا'
+        ],
+        merchantFeatures: [
+          'ارفع صور المنتجات وحدد الأسعار',
+          'إدارة المخزون واستلام الطلبات',
+          'Earn currency from المبيعات',
+          'دفع عمولات المنصة',
+          'اشتراك اختياري لأسعار أقل'
+        ],
+        driverFeatures: [
+          'حافظ على رصيد الحساب',
+          'شراء الرصيد عبر المحفظة الإلكترونية',
+          'قبول طلبات الركوب والتوصيل',
+          'Earn currency من الخدمات المكتملة',
+          '10% عمولة لكل معاملة',
+          'اشتراك اختياري لعمولات أقل'
+        ]
       },
       downloads: {
-        title: 'حمل الآن (أندرويد)',
-        rider: 'تطبيق الراكب',
+        title: 'تحميل الآن (أندرويد)',
+        rider: 'تطبيق إيزي رايد',
         driver: 'تطبيق السائق',
-        store: 'مالك المتجر',
-        provider: 'مزود الخدمة'
+        store: 'تطبيق التاجر',
+        provider: 'تطبيق المزود'
       },
       terms: {
         agree: 'أوافق على',
         link: 'الشروط والأحكام',
-        mustAgree: 'يرجى الموافقة على الشروط والأحكام قبل التحميل.'
+        mustAgree: 'يرجى الموافقة على الشروط قبل التحميل.'
       },
       switchEn: 'English',
-      switchSo: 'الصومالية',
+      switchSo: 'Soomaali',
       switchAr: 'العربية',
       footer: {
         legal: 'قانوني',
@@ -283,88 +351,86 @@ const resources = {
         rider: 'اتفاقية الراكب',
         driver: 'اتفاقية السائق',
         restaurant: 'اتفاقية المطعم',
-        carrental: 'شروط الإيجار',
+        carrental: 'شروط استئجار السيارات',
         community: 'إرشادات المجتمع',
         refund: 'سياسة الاسترداد',
-        aml: 'مكافحة غسل الأموال',
-        databreach: 'سياسة خرق البيانات',
-        eula: 'اتفاقية الترخيص',
+        aml: 'مكافحة غسيل الأموال',
+        databreach: 'سياسة اختراق البيانات',
+        eula: 'ترخيص المستخدم',
         dpa: 'معالجة البيانات',
         dispute: 'حل النزاعات',
-        admin: 'اتفاقية المشرفين',
+        admin: 'اتفاقية الإدارة',
         forcemajeure: 'القوة القاهرة',
         aup: 'الاستخدام المقبول',
-        copyright: '© 2026 BinMahfuud LTD. جميع الحقوق محفوظة.',
-        operated: 'إيزي رايد + هاي! تديرها BinMahfuud LTD.',
+        copyright: '© 2026 هاي! موبيليتي غلوبال إنك. جميع الحقوق محفوظة.',
+        operated: 'إيزي رايد + هاي! تديرها هاي! موبيليتي غلوبال إنك.',
         madeIn: 'صنع في الصومال 🇸🇴'
       },
       benefits: {
-        title: 'من يستفيد وكيف',
-        rider: {
-          who: 'تطبيق الراكب — العميل',
-          for: 'الناس العاديون في لاسعانود الذين يحتاجون نقل أو طعام أو سيارة.',
+        title: 'اختر طريقتك',
+        customer: {
+          who: 'عميل',
+          for: 'كل من يحتاج ركوب أو طعام أو توصيل.',
           benefits: [
-            'رحلات — استلام باچاج في دقائق، تتبع GPS حي، تسعير عادل',
-            'توصيل طعام — اطلب من المطاعم المحلية مع تتبع التوصيل',
-            'استئجار سيارات — سيارات بالساعة/اليوم مع حماية الإيداع',
-            'اليانصيب — شارك في سحوبات الجوائز أثناء استخدام التطبيق',
-            'تنبيهات SOS — تنبيه طوارئ بنقرة واحدة مع الموقع',
-            'الدردشة — تواصل مباشرة مع السائق أثناء الرحلة',
-            'دفع EVC/Zaad — ادفع بأموال الهاتف المحمول الصومالي',
-            'التتبع الحي — شاهد السائق يقترب على الخريطة مباشرة'
+            'تصفح المتاجر (مطاعم، مواد غذائية، صيدليات)',
+            'أضف للسلة بالدفع بالعملة المحلية',
+            'اطلب ركوب أو توصيل',
+            'شراء الرصيد عبر المحفظة (مدير يتحقق)',
+            'اشتراك اختياري للمزايا',
+            'رصيد الإحالة',
+            'دفع آمن عبر EVC/Zaad'
+          ]
+        },
+        merchant: {
+          who: 'تاجر / متجر',
+          for: 'المطاعم والمحلات التجارية التي تريد الوصول لمزيد من العملاء.',
+          benefits: [
+            'ارفع صور المنتجات وحدد الأسعار بالعملة',
+            'إدارة المخزون واستلام الطلبات',
+            'Earn currency credits من المبيعات',
+            'دفع عمولات المنصة',
+            'اشتراك اختياري لأسعار أقل + مميزات',
+            'دعم تسجيل التجار',
+            'تسويق محلي لكل سوق'
           ]
         },
         driver: {
-          who: 'تطبيق السائق — الكاسب',
-          for: 'سائقو الباجاج والدراجات والسيارات الذين يريدون الربح.',
+          who: 'سائق / رايدر',
+          for: 'السائقون الذين يريدون الدخل.',
           benefits: [
-            'كسب مزدوج — اقبل طلبات الرحلات وطلبات توصيل الطعام',
-            'الموقع الحي — يظهر للركاب لتسهيل الاستلام',
-            'الدردشة — تنسق مع الركاب دون مكالمات هاتفية',
-            'نظام العمولة — تقسيم شفاف للأجرة، دفعات تلقائية',
-            'لوحة السائق — تتبع التقييمات، إجمالي الرحلات، سجل الأرباح',
-            'تبديل الاتصال — اتصل أو اقطع متى أردت'
-          ]
-        },
-        store: {
-          who: 'تطبيق مالك المتجر — صاحب المطعم',
-          for: 'أصحاب المطاعم والمتاجر الذين يريدون الوصول لمزيد من العملاء.',
-          benefits: [
-            'إدارة الطلبات — اقبل وأدر طلبات التوصيل فوراً',
-            'لوحة القائمة — حدّث الأصناف والأسعار والتوفر فوراً',
-            'تتبع الإيرادات — شاهد أرباح اليوم/الأسبوع والتحليلات',
-            'وصول العملاء — اكتشفك آلاف الركاب القريبون',
-            'العروض — أطلق صفقات وتخفيضات لزيادة المبيعات'
-          ]
-        },
-        provider: {
-          who: 'تطبيق المزود — مدير الأسطول',
-          for: 'مزودو تأجير السيارات الذين يديرون أساطيل ويريدون عمليات شفافة.',
-          benefits: [
-            'إدارة الأسطول — أضف وتتبع وأدر جميع مركباتك',
-            'نظام الإيداع — ودائع ومدفوعات آمنة بشفافية كاملة',
-            'لوحة الحجوزات — شاهد جميع طلبات الإيجار والإيجارات النشطة والإرجاع',
-            'تقارير الإيرادات — تفصيل كامل للدخل لكل مركبة',
-            'تحقق السائقين — تحقق ووافق على السائقين قبل الإيجار'
+            'حافظ على رصيد الحساب (credits)',
+            'شراء الرصيد عبر المحفظة (مدير يتحقق)',
+            'استخدم الرصيد للعمولات والمصروفات والسحب',
+            'قبول طلبات الركوب والتوصيل',
+            'Earn currency من الخدمات المكتملة',
+            '10% عمولة لكل معاملة',
+            'اشتراك اختياري لعمولات أقل + مزايا',
+            'مكافآت توظيف السائقين'
           ]
         },
         table: {
-          app: 'التطبيق',
-          who: 'لمن',
-          mainBenefit: 'الفائدة الرئيسية',
-          riderApp: 'الراكب',
-          riderWho: 'العميل',
-          riderBenefit: 'كل شيء عند الطلب، آمن ومحلي',
-          driverApp: 'السائق',
-          driverWho: 'الكاسب',
-          driverBenefit: 'دخل مزدوج من الرحلات والتوصيل',
-          storeApp: 'المتجر',
-          storeWho: 'صاحب المطعم',
-          storeBenefit: 'الوصول لآلاف العملاء الجدد',
-          providerApp: 'المزود',
-          providerWho: 'مدير الأسطول',
-          providerBenefit: 'إدارة أسطول وودائع شفافة'
+          app: 'نوع التطبيق',
+          who: 'من',
+          mainBenefit: 'الميزة الرئيسية',
+          customerApp: 'عميل',
+          customerWho: 'تسوق واركب',
+          customerBenefit: 'كل شيء عند الطلب',
+          merchantApp: 'تاجر',
+          merchantWho: 'بيع أونلاين',
+          merchantBenefit: 'الوصول لآلاف العملاء',
+          driverApp: 'سائق',
+          driverWho: 'اربح',
+          driverBenefit: 'دخل مرن'
         }
+      },
+      howItWorks: {
+        title: 'كيف يعمل',
+        step1: 'حمل التطبيق',
+        step1Desc: 'احصل على تطبيق إيزي رايد من الموقع',
+        step2: 'اختر دورك',
+        step2Desc: 'سجل كعميل أو تاجر أو سائق',
+        step3: 'ابدأ الاستخدام',
+        step3Desc: 'تسوق أو باع أو اربح حسب دورك'
       }
     }
   }
@@ -373,6 +439,7 @@ const resources = {
 i18n.use(initReactI18next).init({
   resources,
   lng: 'en',
+  fallbackLng: 'en',
   interpolation: { escapeValue: false }
 });
 
