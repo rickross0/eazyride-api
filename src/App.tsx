@@ -558,33 +558,40 @@ function Services() {
   const { t } = useTranslation();
   const [ref, inView] = useInView({ threshold: 0.2, triggerOnce: true });
 
+  const serviceCards = [
+    { key: 'customer', color: 'cyan', icon: '🛒' },
+    { key: 'merchant', color: 'gold', icon: '🏪' },
+    { key: 'driver', color: 'green', icon: '🚗' }
+  ];
+
   return (
     <section ref={ref} id="services" className="py-32 px-4 bg-gradient-to-b from-black to-navy-900 text-white relative">
       <Particles options={particleOptions} className="absolute inset-0 z-0 opacity-30" />
       <div className="relative z-10 max-w-6xl mx-auto">
         <motion.h2 initial={{ opacity: 0, scale: 0.9 }} animate={inView ? { opacity: 1, scale: 1 } : {}}
           className="text-4xl md:text-5xl font-bold text-center mb-20 text-gold glow-gold">{t('services.title')}</motion.h2>
-        <div className="grid md:grid-cols-2 gap-12">
-          <motion.div initial={{ opacity: 0, x: -60 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.8 }}
-            whileHover={{ scale: 1.03, y: -8, boxShadow: '0 0 40px rgba(0,188,212,0.4)' }}
-            className="bg-navy-700/60 backdrop-blur-xl p-10 rounded-3xl border border-cyan/30 hover:border-cyan/60 shadow-2xl group transition-all">
-            <motion.img src="/EazyRide-logo-removebg-preview.png" alt="EazyRide" className="w-20 mx-auto mb-6 group-hover:animate-pulse"
-              whileHover={{ scale: 1.15, rotate: 360 }} />
-            <h3 className="text-3xl font-bold mb-6 text-cyan">{t('services.eazyride')}</h3>
-            <motion.ul className="space-y-3 text-lg opacity-90" variants={staggerContainer} initial="hidden" whileInView="show">
-              <motion.li variants={staggerItem} className="flex items-start"><span className="w-2 h-2 bg-cyan rounded-full mt-2 mr-3 flex-shrink-0" />{t('services.desc1')}</motion.li>
-              <motion.li variants={staggerItem} className="flex items-start"><span className="w-2 h-2 bg-cyan rounded-full mt-2 mr-3 flex-shrink-0" />{t('services.desc2')}</motion.li>
-            </motion.ul>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, x: 60 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.8 }}
-            whileHover={{ scale: 1.03, y: -8, boxShadow: '0 0 40px rgba(255,215,0,0.4)' }}
-            className="bg-navy-700/60 backdrop-blur-xl p-10 rounded-3xl border border-gold/30 hover:border-gold/60 shadow-2xl group transition-all">
-            <img src="/Haye!.jpeg" alt="Haye!" className="w-20 mx-auto mb-6 group-hover:animate-pulse rounded-2xl" />
-            <h3 className="text-3xl font-bold mb-6 text-gold">{t('services.haye')}</h3>
-            <motion.ul className="space-y-3 text-lg opacity-90" variants={staggerContainer} initial="hidden" whileInView="show">
-              <motion.li variants={staggerItem} className="flex items-start"><span className="w-2 h-2 bg-gold rounded-full mt-2 mr-3 flex-shrink-0" />{t('services.desc3')}</motion.li>
-            </motion.ul>
-          </motion.div>
+        <div className="grid md:grid-cols-3 gap-8">
+          {serviceCards.map((card, i) => {
+            const features = t(`services.${card.key}Features`, { returnObjects: true });
+            const colorClass = card.color === 'cyan' ? 'text-cyan border-cyan/30 hover:border-cyan/60' : card.color === 'gold' ? 'text-gold border-gold/30 hover:border-gold/60' : 'text-green-400 border-green-400/30 hover:border-green-400/60';
+            const bgClass = card.color === 'cyan' ? 'hover:bg-cyan/10' : card.color === 'gold' ? 'hover:bg-gold/10' : 'hover:bg-green-400/10';
+            return (
+              <motion.div key={card.key} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: i * 0.15 }} whileHover={{ scale: 1.03, y: -8 }}
+                className={`bg-navy-700/60 backdrop-blur-xl p-8 rounded-3xl border ${colorClass} shadow-2xl group transition-all ${bgClass}`}>
+                <div className="text-5xl mb-4 text-center">{card.icon}</div>
+                <h3 className={`text-2xl font-bold mb-3 text-center ${colorClass.split(' ')[0]}`}>{t(`services.${card.key}`)}</h3>
+                <p className="text-center text-lg opacity-80 mb-6">{t(`services.${card.key}Desc`)}</p>
+                <motion.ul className="space-y-2 text-sm opacity-90" variants={staggerContainer} initial="hidden" whileInView="show">
+                  {Array.isArray(features) && features.map((feat: any, j: number) => (
+                    <motion.li key={j} variants={staggerItem} className="flex items-start">
+                      <span className={`w-2 h-2 rounded-full mt-1.5 mr-2 flex-shrink-0 ${card.color === 'cyan' ? 'bg-cyan' : card.color === 'gold' ? 'bg-gold' : 'bg-green-400'}`} />{feat}
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
