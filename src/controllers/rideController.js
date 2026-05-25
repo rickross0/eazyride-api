@@ -29,51 +29,62 @@ exports.createRide = async (req, res, next) => {
 
     if (!pickup) throw new AppError('Pickup location required (pickupLat/pickupLng or pickupCoordinates)', 400);
 
-    // Default dropoff to nearby if not provided (quick-ride flow)
-    const effectiveDropoff = dropoff || { lat: pickup.lat + 0.005, lng: pickup.lng + 0.005 };
-
-    // Reverse-geocode addresses if not provided
+    // Reverse-geocode pickup address if not provided
     if (!pickupAddress) {
       try {
         const geo = await reverseGeocode(pickup.lat, pickup.lng);
         pickupAddress = geo.address || 'Pickup location';
       } catch { pickupAddress = 'Pickup location'; }
     }
-    if (!dropoffAddress && dropoff) {
-      try {
-        const geo = await reverseGeocode(dropoff.lat, dropoff.lng);
-        dropoffAddress = geo.address || 'Dropoff location';
-      } catch { dropoffAddress = 'Dropoff location'; }
-    }
-    if (!dropoffAddress) dropoffAddress = 'Nearby dropoff';
 
-    const route = await getRoute(pickup, effectiveDropoff);
-    const fare = await calculateFare({ distance: route.distance, duration: route.duration, vehicleType, promoCode });
+    // Calculate fare only if dropoff is provided by rider
+    let fare = null;
+    let route = null;
+    if (dropoff) {
+      // Reverse-geocode dropoff address if not provided
+      if (!dropoffAddress) {
+        try {
+          const geo = await reverseGeocode(dropoff.lat, dropoff.lng);
+          dropoffAddress = geo.address || 'Dropoff location';
+        } catch { dropoffAddress = 'Dropoff location'; }
+      }
+      
+      route = await getRoute(pickup, dropoff);
+      fare = await calculateFare({ distance: route.distance, duration: route.duration, vehicleType, promoCode });
+    }
 
     const ride = await prisma.ride.create({
       data: {
         riderId,
         pickupAddress,
-        dropoffAddress,
+        dropoffAddress: dropoffAddress || null,
         pickupCoordinates: pickup,
-        dropoffCoordinates: effectiveDropoff,
-        estimatedDistance: route.distance,
-        estimatedDuration: Math.round(route.duration),
+        dropoffCoordinates: dropoff || null,
+        estimatedDistance: route?.distance || null,
+        estimatedDuration: route ? Math.round(route.duration) : null,
         vehicleType,
         paymentMethod,
-        baseFare: fare.baseFare,
-        distanceFare: fare.distanceFare,
-        timeFare: fare.timeFare,
-        surgeFare: fare.surgeFare,
-        totalFare: fare.totalFare,
-        discountAmount: fare.discountAmount,
-        commissionAmount: fare.commissionAmount,
-        driverEarnings: fare.driverEarnings,
+        baseFare: fare?.baseFare || 0,
+        distanceFare: fare?.distanceFare || 0,
+        timeFare: fare?.timeFare || 0,
+        surgeFare: fare?.surgeFare || 0,
+        totalFare: fare?.totalFare || 0,
+        discountAmount: fare?.discountAmount || 0,
+        commissionAmount: fare?.commissionAmount || 0,
+        driverEarnings: fare?.driverEarnings || 0,
       },
     });
 
     const flatRide = flattenRide(ride);
-    emitToOnlineDrivers('ride:request', { rideId: ride.id, pickup: pickupAddress, dropoff: dropoffAddress, fare: fare.totalFare, vehicleType });
+    
+    // Only emit ride request to drivers if no dropoff (rider hasn't set destination yet)
+    // or emit with full details if dropoff is provided
+    if (!dropoff) {
+      emitToOnlineDrivers('ride:request', { rideId: ride.id, pickup: pickupAddress, dropoff: null, fare: null, vehicleType });
+    } else {
+      emitToOnlineDrivers('ride:request', { rideId: ride.id, pickup: pickupAddress, dropoff: dropoffAddress, fare: fare.totalFare, vehicleType });
+    }
+    
     logger.info(`Ride created: ${ride.id}`);
     res.status(201).json({ success: true, data: flatRide, ride: flatRide });
   } catch (error) { next(error); }
@@ -108,19 +119,94 @@ exports.acceptRide = async (req, res, next) => {
 
 exports.updateRideStatus = async (req, res, next) => {
   try {
-    const { status } = req.body;
+    const { status, dropoffLat, dropoffLng, dropoffCoordinates, dropoffAddress } = req.body;
     const ride = await prisma.ride.findUnique({ where: { id: req.params.id } });
     if (!ride) throw new AppError('Ride not found', 404);
 
     const updateData = { status };
+    
     if (status === 'DRIVER_ARRIVED') updateData.startedAt = new Date();
     if (status === 'IN_PROGRESS') updateData.startedAt = updateData.startedAt || new Date();
-    if (status === 'COMPLETED') { updateData.completedAt = new Date(); updateData.finalFare = ride.totalFare; }
+    
+    if (status === 'COMPLETED') {
+      updateData.completedAt = new Date();
+      
+      // Get the actual dropoff from request or keep existing
+      const dropoff = dropoffCoordinates || (dropoffLat != null && dropoffLng != null ? { lat: Number(dropoffLat), lng: Number(dropoffLng) } : null);
+      const existingDropoff = ride.dropoffCoordinates;
+      const finalDropoff = dropoff || existingDropoff;
+      
+      let finalFare = ride.totalFare;
+      
+      // Calculate fare based on actual route if dropoff is now available
+      if (finalDropoff) {
+        try {
+          const pickup = ride.pickupCoordinates;
+          const route = await getRoute(pickup, finalDropoff);
+          const fare = await calculateFare({ distance: route.distance, duration: route.duration, vehicleType: ride.vehicleType });
+          
+          updateData.dropoffCoordinates = finalDropoff;
+          updateData.dropoffAddress = dropoffAddress || 'Dropoff location';
+          updateData.estimatedDistance = route.distance;
+          updateData.estimatedDuration = Math.round(route.duration);
+          updateData.baseFare = fare.baseFare;
+          updateData.distanceFare = fare.distanceFare;
+          updateData.timeFare = fare.timeFare;
+          updateData.surgeFare = fare.surgeFare;
+          updateData.totalFare = fare.totalFare;
+          updateData.discountAmount = fare.discountAmount;
+          updateData.commissionAmount = fare.commissionAmount;
+          updateData.driverEarnings = fare.driverEarnings;
+          
+          finalFare = fare.totalFare;
+          logger.info(`Ride ${ride.id}: Final fare calculated: $${finalFare} (distance: ${route.distance}km)`);
+        } catch (fareError) {
+          logger.error(`Ride ${ride.id}: Fare calculation failed, using estimate:`, fareError.message);
+          updateData.finalFare = finalFare;
+        }
+      } else {
+        updateData.finalFare = finalFare;
+      }
+      
+      // Auto-deduct fare from rider's wallet
+      if (finalFare > 0) {
+        try {
+          const wallet = await prisma.wallet.findUnique({ where: { userId: ride.riderId } });
+          if (wallet && wallet.balance >= finalFare) {
+            await prisma.wallet.update({
+              where: { userId: ride.riderId },
+              data: { balance: { decrement: finalFare } },
+            });
+            
+            // Record transaction
+            await prisma.transaction.create({
+              data: {
+                walletId: wallet.id,
+                userId: ride.riderId,
+                type: 'RIDE_PAYMENT',
+                amount: finalFare,
+                balanceAfter: wallet.balance - finalFare,
+                description: `Ride payment - Ride ${ride.id.slice(0, 8)}`,
+                referenceId: ride.id,
+                referenceType: 'RIDE',
+              },
+            });
+            
+            logger.info(`Ride ${ride.id}: Deducted $${finalFare} from rider ${ride.riderId} wallet`);
+          } else {
+            logger.warn(`Ride ${ride.id}: Rider ${ride.riderId} has insufficient balance (${wallet?.balance || 0}), fare: ${finalFare}`);
+          }
+        } catch (paymentError) {
+          logger.error(`Ride ${ride.id}: Payment deduction failed:`, paymentError.message);
+        }
+      }
+    }
+    
     if (status === 'CANCELLED') { updateData.cancelledAt = new Date(); updateData.cancelledBy = req.user.id; }
 
     const updated = await prisma.ride.update({ where: { id: req.params.id }, data: updateData });
-    emitToUser(updated.riderId, 'ride:update', { rideId: updated.id, status });
-    if (updated.driverId) emitToUser(updated.driverId, 'ride:update', { rideId: updated.id, status });
+    emitToUser(updated.riderId, 'ride:update', { rideId: updated.id, status, finalFare: updated.finalFare });
+    if (updated.driverId) emitToUser(updated.driverId, 'ride:update', { rideId: updated.id, status, finalFare: updated.finalFare });
     res.json({ success: true, data: flattenRide(updated) });
   } catch (error) { next(error); }
 };
@@ -179,4 +265,3 @@ exports.getAllRides = async (req, res, next) => {
     res.json({ success: true, ...paginationResponse(rides.map(flattenRide), total, p, l) });
   } catch (error) { next(error); }
 };
-
