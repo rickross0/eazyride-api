@@ -74,3 +74,17 @@ exports.getAllProvidersAdmin = async (req, res, next) => {
     res.json({ success: true, ...paginationResponse(providers, total, p, l) });
   } catch (error) { next(error); }
 };
+
+exports.updateProviderCommission = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { commissionRate } = req.body;
+    if (commissionRate === undefined) throw new AppError('Commission rate is required', 400);
+    
+    const updated = await prisma.providerProfile.update({
+      where: { id },
+      data: { commissionRate: Number(commissionRate) },
+    });
+    res.json({ success: true, data: updated });
+  } catch (error) { next(error); }
+};
