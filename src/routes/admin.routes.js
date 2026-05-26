@@ -65,6 +65,7 @@ router.get('/orders', requirePermission('VIEW_ORDERS'), orderController.getAllOr
 // Providers
 router.get('/providers', requirePermission('VIEW_PROVIDERS'), providerController.getAllProvidersAdmin);
 router.put('/providers/:id/commission', requirePermission('SET_COMMISSIONS'), providerController.updateProviderCommission);
+router.put('/providers/:id/approve', requirePermission('APPROVE_PROVIDERS'), providerController.approveProvider);
 
 // Settings
 router.get('/settings', requirePermission('MANAGE_SETTINGS'), settingsController.getAppSettings);
