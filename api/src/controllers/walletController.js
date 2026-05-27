@@ -36,9 +36,32 @@ exports.requestPayout = async (req, res, next) => {
     const { amount, method, bankName, accountNumber, accountName, phone } = req.body;
     const wallet = await prisma.wallet.findUnique({ where: { userId: req.user.id } });
     if (!wallet || wallet.balance < amount) throw new AppError('Insufficient balance', 400);
+    
+    // Create payout record
     const payout = await prisma.payout.create({
       data: { userId: req.user.id, amount, method, bankName, accountNumber, accountName, phone, status: 'PENDING' },
     });
+    
+    // Deduct from wallet
+    await prisma.wallet.update({
+      where: { userId: req.user.id },
+      data: { balance: { decrement: amount } },
+    });
+    
+    // Create transaction record
+    await prisma.transaction.create({
+      data: {
+        walletId: wallet.id,
+        userId: req.user.id,
+        type: 'WITHDRAWAL',
+        amount,
+        balanceAfter: wallet.balance - amount,
+        description: `Payout request via ${method}`,
+        referenceId: payout.id,
+        referenceType: 'PAYOUT',
+      },
+    });
+    
     res.status(201).json({ success: true, data: payout });
   } catch (error) { next(error); }
 };
@@ -74,11 +97,22 @@ exports.completePayout = async (req, res, next) => {
       where: { id: req.params.id },
       data: { status: 'COMPLETED', completedAt: new Date() },
     });
-    // Deduct from wallet
-    await prisma.wallet.update({
-      where: { userId: payout.userId },
-      data: { balance: { decrement: payout.amount } },
-    });
+    // Note: wallet was already deducted at request time
     res.json({ success: true, data: payout });
+  } catch (error) { next(error); }
+};
+
+// Get current user's payouts
+exports.getMyPayouts = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20, status } = req.query;
+    const { skip, take, page: p, limit: l } = paginate(page, limit);
+    const where = { userId: req.user.id };
+    if (status) where.status = status;
+    const [payouts, total] = await Promise.all([
+      prisma.payout.findMany({ where, skip, take: l, orderBy: { createdAt: 'desc' } }),
+      prisma.payout.count({ where }),
+    ]);
+    res.json({ success: true, ...paginationResponse(payouts, total, p, l) });
   } catch (error) { next(error); }
 };

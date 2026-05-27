@@ -257,61 +257,71 @@ router.delete('/me/cancellation-rules/:id', authMiddleware, async (req, res) => 
 // ── Provider Payouts ────────────────────────────────────────
 router.get('/me/payouts', authMiddleware, async (req, res) => {
   try {
-    const payouts = await prisma.payoutRecord.findMany({
-      where: { userId: req.userId },
+    const payouts = await prisma.payout.findMany({
+      where: { userId: req.user.id },
       orderBy: { createdAt: 'desc' },
       take: 20,
     });
-    res.json({ payouts });
+    res.json({ success: true, data: payouts });
   } catch (err) {
-    // PayoutRecord may not exist yet - return empty
-    res.json({ payouts: [] });
+    console.error('Payout fetch error:', err);
+    res.json({ success: true, data: [] });
   }
 });
 
 router.post('/me/payouts', authMiddleware, async (req, res) => {
   try {
-    const provider = await prisma.serviceProvider.findUnique({ where: { userId: req.userId } });
-    if (!provider) return res.status(404).json({ error: 'No provider profile found' });
+    const { amount, method, bankName, accountNumber, accountName, phone } = req.body;
+    const provider = await prisma.providerProfile.findUnique({ where: { userId: req.user.id } });
+    if (!provider) return res.status(404).json({ success: false, message: 'No provider profile found' });
 
     // Get available balance from wallet
-    const wallet = await prisma.wallet.findUnique({ where: { userId: req.userId } });
+    const wallet = await prisma.wallet.findUnique({ where: { userId: req.user.id } });
     if (!wallet || wallet.balance <= 0) {
-      return res.status(400).json({ error: 'No available balance for payout' });
+      return res.status(400).json({ success: false, message: 'No available balance for payout' });
     }
 
-    const amount = wallet.balance;
-    const payout = await prisma.payoutRecord.create({
+    const payoutAmount = amount || wallet.balance;
+    if (payoutAmount > wallet.balance) {
+      return res.status(400).json({ success: false, message: 'Amount exceeds wallet balance' });
+    }
+
+    const payout = await prisma.payout.create({
       data: {
-        userId: req.userId,
-        amount,
-        method: 'WALLET',
+        userId: req.user.id,
+        amount: payoutAmount,
+        method: method || 'WALLET',
         status: 'PENDING',
+        bankName,
+        accountNumber,
+        accountName,
+        phone,
       },
     });
 
     // Deduct from wallet
     await prisma.wallet.update({
-      where: { userId: req.userId },
-      data: { balance: 0 },
+      where: { userId: req.user.id },
+      data: { balance: { decrement: payoutAmount } },
     });
 
     await prisma.transaction.create({
       data: {
         walletId: wallet.id,
+        userId: req.user.id,
         type: 'WITHDRAWAL',
-        amount,
-        balanceBefore: amount,
-        balanceAfter: 0,
-        description: 'Payout request',
+        amount: payoutAmount,
+        balanceAfter: wallet.balance - payoutAmount,
+        description: `Payout request via ${method || 'WALLET'}`,
         referenceId: payout.id,
+        referenceType: 'PAYOUT',
       },
     });
 
-    res.json({ payout });
+    res.json({ success: true, data: payout });
   } catch (err) {
     console.error('Payout request error:', err);
-    res.status(500).json({ error: 'Failed to request payout' });
+    res.status(500).json({ success: false, message: 'Failed to request payout' });
   }
 });
 

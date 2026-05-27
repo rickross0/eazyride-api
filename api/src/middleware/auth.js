@@ -96,4 +96,4 @@ const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
-module.exports = { authenticate, optionalAuth, generateTokens };
+module.exports = { authenticate, authMiddleware: authenticate, optionalAuth, generateTokens };
