@@ -164,3 +164,25 @@ exports.getAuditLog = async (req, res, next) => {
     res.json({ success: true, ...paginationResponse(logs, total, p, l) });
   } catch (error) { next(error); }
 };
+
+// Change user role
+exports.changeUserRole = async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    const { id } = req.params;
+    
+    const validRoles = ['RIDER', 'DRIVER', 'STORE_OWNER', 'SERVICE_PROVIDER', 'RENTAL_COMPANY', 'ADMIN'];
+    
+    if (!role || !validRoles.includes(role)) {
+      throw new AppError('Invalid role specified', 400);
+    }
+    
+    const user = await prisma.user.update({
+      where: { id },
+      data: { role },
+      select: { id: true, firstName: true, lastName: true, phone: true, role: true }
+    });
+    
+    res.json({ success: true, message: 'Role updated successfully', data: user });
+  } catch (error) { next(error); }
+};

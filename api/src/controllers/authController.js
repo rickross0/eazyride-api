@@ -12,7 +12,13 @@ const logger = require('../utils/logger');
 // Register new user
 exports.register = async (req, res, next) => {
   try {
-    const { phone, email, password, firstName, lastName } = req.body;
+    const { phone, email, password, firstName, lastName, role } = req.body;
+    
+    // Validate role
+    const validRoles = ['RIDER', 'DRIVER', 'STORE_OWNER', 'SERVICE_PROVIDER', 'RENTAL_COMPANY'];
+    if (role && !validRoles.includes(role)) {
+      throw new AppError('Invalid role specified', 400);
+    }
 
     // Check if user exists
     const existingUser = await prisma.user.findFirst({
@@ -39,7 +45,7 @@ exports.register = async (req, res, next) => {
         password: hashedPassword,
         firstName,
         lastName,
-        role: 'RIDER'
+        role: role || 'RIDER'
       }
     });
 
