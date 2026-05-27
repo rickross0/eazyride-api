@@ -403,6 +403,21 @@ exports.resetPassword = async (req, res, next) => {
 };
 
 // Upload driver documents
+exports.uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) throw new AppError('No image uploaded', 400);
+    const filename = req.file.filename;
+    const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
+    
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { avatar: avatarUrl },
+    });
+    
+    res.json({ success: true, data: { avatar: avatarUrl } });
+  } catch (error) { next(error); }
+};
+
 exports.uploadDriverDocuments = async (req, res, next) => {
   try {
     // Documents would be uploaded via multer
